@@ -1,13 +1,23 @@
 /* ═══════════════════════════════════════════════
-   Worksheet Maker — 8 core components
+   Worksheet Maker — core components
    Copy the blocks you need into the <style> of base-template.html.
    Each block depends only on the CSS variables defined at :root
    (see base-template.html for the variable contract).
 
+   Every block is paired with the exact HTML markup that goes with it.
+   Don't guess the markup — copy it. The CSS assumes this structure.
+
    Generated with worksheet-maker by Alex Tong — https://alextong.me
    ═══════════════════════════════════════════════ */
 
-/* ── 1. WRITE LINES — ruled answer space ── */
+/* ── 1. WRITE LINES — ruled answer space ──
+   Markup:
+     <div class="write-area">
+       <div class="write-line"></div>
+       <div class="write-line"></div>
+       <div class="write-line"></div>
+     </div>
+*/
 .write-area {
   display: flex;
   flex-direction: column;
@@ -20,7 +30,13 @@
   border-bottom: 1px solid var(--rule);
 }
 
-/* ── 2. CHECKBOXES — task lists, agree/disagree ── */
+/* ── 2. CHECKBOXES — task lists, agree/disagree ──
+   Markup (the empty .check-box div IS the visible square — don't omit it):
+     <div class="check-group">
+       <div class="check-item"><div class="check-box"></div><span>Option A</span></div>
+       <div class="check-item"><div class="check-box"></div><span>Option B</span></div>
+     </div>
+*/
 .check-group {
   display: flex;
   flex-wrap: wrap;
@@ -35,12 +51,20 @@
 .check-box {
   width: 13px;
   height: 13px;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid #000;
   border-radius: 2px;
   flex-shrink: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
-/* ── 3. MULTIPLE CHOICE — A/B/C/D bubbles ── */
+/* ── 3. MULTIPLE CHOICE — A/B/C/D bubbles ──
+   Markup:
+     <div class="mc-group">
+       <div class="mc-item"><div class="mc-bubble">A</div><span>First choice</span></div>
+       <div class="mc-item"><div class="mc-bubble">B</div><span>Second choice</span></div>
+     </div>
+*/
 .mc-group {
   display: flex;
   flex-direction: column;
@@ -55,7 +79,7 @@
 .mc-bubble {
   width: 22px;
   height: 22px;
-  border: 1.5px solid var(--ink);
+  border: 1.5px solid #000;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -64,9 +88,14 @@
   font-weight: 600;
   color: var(--ink-light);
   flex-shrink: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
-/* ── 4. MATCHING — left → right term to definition ── */
+/* ── 4. MATCHING — left → right term to definition ──
+   Markup (one .match-grid per pair):
+     <div class="match-grid"><span class="match-left">Term</span><span class="match-line"></span><span class="match-right">Definition</span></div>
+*/
 .match-grid {
   display: flex;
   align-items: center;
@@ -88,7 +117,10 @@
   color: var(--ink-light);
 }
 
-/* ── 5. FILL-IN-THE-BLANK — inline underline ── */
+/* ── 5. FILL-IN-THE-BLANK — inline underline ──
+   Markup (inside any text block):
+     <p>The capital of France is <span class="blank"></span>.</p>
+*/
 .blank {
   display: inline-block;
   min-width: 80px;
@@ -97,7 +129,10 @@
   margin: 0 2px;
 }
 
-/* ── 6. CALLOUT — tip / note box ── */
+/* ── 6. CALLOUT — tip / note box ──
+   Markup:
+     <div class="callout"><strong>Note:</strong> the callout text goes here.</div>
+*/
 .callout {
   background: var(--bg-callout);
   border-left: 3px solid var(--accent);
@@ -106,24 +141,132 @@
   line-height: 1.5;
   border-radius: 0 4px 4px 0;
   margin: 10px 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 .callout strong {
   color: var(--accent);
 }
 
-/* ── 7. DRAWING BOX — blank bordered area for sketches / diagrams ── */
+/* ── 7. DRAWING BOX — blank bordered area for sketches / diagrams ──
+   Markup:
+     <div class="draw-box"></div>
+*/
 .draw-box {
   border: 1.5px solid var(--rule);
   border-radius: 4px;
   margin: 8px 0;
   min-height: 120px;
-  background: white;
 }
 
 /* ── 8. PART HEADER — numbered section label ──
-   Already wired in base-template.html. This block documents the
-   variable contract the base template provides; re-declaring it
-   in your worksheet's <style> is unnecessary.
-
-   .part, .part-header, .part-number, .part-title, .part-instruction
+   Already wired in base-template.html. The variable contract and markup:
+     <div class="part">
+       <div class="part-header">
+         <span class="part-number">01</span>
+         <span class="part-title">Section title</span>
+       </div>
+       <div class="part-instruction">Brief instruction in italics.</div>
+       <!-- component content here -->
+     </div>
 */
+
+/* ── 9. CODE BLOCK — monospace with filled background ──
+   Use for any code sample. Prints legibly in grayscale because the
+   background tint and accent border both survive black-and-white.
+   Markup (preserve whitespace with <pre><code>…</code></pre>):
+     <pre class="code-block"><code>async def fetch(url):
+       async with session.get(url) as r:
+           return await r.text()</code></pre>
+
+   For fill-in-the-blank INSIDE code, wrap the gap in <span class="code-blank"></span>.
+   For diff hunks, wrap lines in <span class="code-add"> or <span class="code-del">.
+*/
+.code-block {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10pt;
+  line-height: 1.5;
+  background: #f5f5f0;
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  margin: 10px 0;
+  white-space: pre;
+  overflow-x: auto;
+  border-radius: 0 4px 4px 0;
+  color: var(--ink);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.code-block .comment {
+  color: var(--ink-light);
+  font-style: italic;
+}
+.code-blank {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 1.5px solid var(--ink);
+  padding: 0 2px;
+  font-family: inherit;
+  vertical-align: baseline;
+}
+.code-add {
+  display: block;
+  background: #e8f5ee;
+  border-left: 2px solid #009E73;
+  padding-left: 6px;
+  margin-left: -8px;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.code-add::before { content: "+ "; color: #009E73; font-weight: 700; }
+.code-del {
+  display: block;
+  background: #fbe9df;
+  border-left: 2px solid #D55E00;
+  padding-left: 6px;
+  margin-left: -8px;
+  text-decoration: line-through;
+  text-decoration-color: rgba(213, 94, 0, 0.5);
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.code-del::before { content: "- "; color: #D55E00; font-weight: 700; text-decoration: none; }
+
+/* ── 10. PREDICT-THE-OUTPUT TABLE — two-column input → ___ ──
+   Pairs naturally with .code-block for async/await, recursion, regex drills.
+   Markup:
+     <table class="predict-table">
+       <thead><tr><th>Input</th><th>Output</th></tr></thead>
+       <tbody>
+         <tr><td><code>sum([1,2,3])</code></td><td></td></tr>
+         <tr><td><code>len("hello")</code></td><td></td></tr>
+       </tbody>
+     </table>
+*/
+.predict-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+  margin: 8px 0;
+}
+.predict-table th {
+  text-align: left;
+  font-family: var(--heading-font);
+  font-weight: 400;
+  font-size: 11pt;
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--ink);
+}
+.predict-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--rule-light);
+  vertical-align: top;
+  min-height: 28px;
+}
+.predict-table td:first-child {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  width: 50%;
+}
+.predict-table td:last-child {
+  border-left: 1px dotted var(--rule);
+}
