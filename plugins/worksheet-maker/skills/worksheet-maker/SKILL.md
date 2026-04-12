@@ -70,8 +70,21 @@ Produces a self-contained HTML worksheet that opens in any browser and prints to
 | Teaching a code concept | Use `.code-block` + `.predict-table` + `.write-area` for tracing |
 | Audience unspecified | Ask via `AskUserQuestion` before writing any HTML |
 | Activity type not in the components | Compose from existing components; don't invent new scaffolds |
-| A4 instead of Letter | Swap **both** `@page { size: A4 }` **and** `.sheet { width: 210mm; height: 297mm }` — one without the other silently fails in Safari |
+| A4 instead of Letter | Swap **both** `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }` — one without the other silently fails in Safari |
 | Answer key | Append a final `<section class="sheet">` at the end with a distinct header |
+
+**Content budget per page.** The most common failure mode of a worksheet is not typography — it's overstuffing. The printable area is fixed (7.5in × 10in on Letter, after the 0.5in safe margin), so everything you add competes for the same pixels. Use these ceilings as a hard budget when planning Phase 4. If the dump exceeds the budget, split across pages or drop the weakest activity — never squeeze everything onto one page by shrinking type below the minimum.
+
+| Per page | Parts | Write-lines | Code-block lines | Predict-table rows | Full-width callouts |
+|---|---|---|---|---|---|
+| Adult / workshop | 3-4 | 18-22 | 25-30 | 6-8 | 1-2 |
+| Bootcamp / junior | 3 | 16-20 | 20-25 | 5-7 | 1-2 |
+| High school | 3 | 14-18 | 18-22 | 5-6 | 1 |
+| Grades 6-8 | 2-3 | 10-14 | — | 4-5 | 1 |
+| Grades 3-5 | 2 | 8-12 | — | 3-4 | 1 |
+| K-2 | 1-2 | 6-10 | — | — | 1 |
+
+> These are **ceilings, not targets**. Leave ~15% vertical slack per page for the header, fields row, footer, and `.part-instruction` italics. A page that's exactly at ceiling will visually feel cramped even when it technically fits.
 
 ## Requirements for Outputs
 
@@ -90,15 +103,57 @@ Every generated worksheet must satisfy these. They are the difference between a 
 
 ### Phase 1 — Gather requirements
 
-Use `AskUserQuestion` to confirm the essentials. Skip any the user already answered in conversation. Ask up to 3 questions at once.
+Gather requirements in two steps: short bounded answers first, then a single freeform content dump. This split exists because worksheet *content* is the one thing that never fits into multiple-choice — users need to paste code, specs, outlines, or entire lesson notes, and `AskUserQuestion` caps at 2-4 short options per question. The content step bypasses the tool entirely.
 
-**Required:** audience — age range *or* role/context. Examples: "Grade 4", "bootcamp cohort", "L5 engineers at a design review", "first-time conference attendees". Audience drives every typography decision; guessing wrong forces a full rewrite.
+**Step 1a — Bounded fields.** Use `AskUserQuestion` to collect only the short answers. Skip any the user already answered in the initial prompt. Ask up to 3 at once. The bounded fields are:
 
-**Usually required:** topic and activity types (fill-in-blank, MC, free response, matching, code-tracing, predict-the-output), page count.
+- **Audience** (required) — age range *or* role/context. Examples: "Grade 4", "bootcamp cohort", "L5 engineers at a design review", "first-time conference attendees". Audience drives every typography decision; guessing wrong forces a full rewrite.
+- **Page count** (required) — 1, 2, or 3+ pages.
+- **Paper size** (optional, default Letter) — Letter or A4.
+- **Subject preset** (optional) — Math/Science, ELA, Code/Systems, or Other. Drives the accent color.
 
-**Optional:** subject preset, paper size (Letter vs A4), header label (class name, workshop name, team name).
+Do NOT ask about topic, content, or what to put on the worksheet in this step. That comes next, as a freeform dump.
 
-### Phase 2 — Copy the base template
+**Step 1b — Content dump.** End Phase 1 by printing the message below as plain text. **Do not call `AskUserQuestion` or any other tool after printing this message.** Ending the turn with only text output makes Claude Code wait for the user's next message, which can be any length or format — exactly what a content brief needs.
+
+Print this verbatim (adapt only the example bullets if the audience makes a different set of examples more natural):
+
+> **Now tell me what to put on the worksheet.** Dump anything that should show up: concepts to cover, code snippets, sample inputs/outputs, questions you want asked, learning goals, gotchas you want emphasized, or the raw source you're teaching from. One message, no length limit, any format works.
+>
+> Examples of what you can paste:
+> - A list of topics: `asyncio.gather, asyncio.wait, cancellation, event loop basics`
+> - A code snippet you want students to trace, predict, or fix
+> - A rough outline: `part 1 predict output · part 2 fix the bug · part 3 short answer`
+> - A full spec, blog post, or lesson plan pasted inline
+> - Just one line: `the difference between await and yield`
+
+After printing this message, stop. Do not call any tool. Claude Code will display the text and wait for the user's reply.
+
+### Phase 2 — Parse the content dump
+
+The user's next message contains the complete content brief. Treat it as final — do not call `AskUserQuestion`, do not ask for more detail, do not ask for confirmation. Parse in a single pass and extract:
+
+- **Concrete topics** — the actual concepts to teach (e.g., "asyncio.gather", "rebase vs merge", "SQL left join semantics")
+- **Provided code** — any snippets the user pasted; use them verbatim inside `.code-block` parts
+- **Activity shape hints** — words like *predict*, *trace*, *fix*, *fill in*, *match*, *short answer* map to specific components (`.predict-table`, `.write-area`, `.code-blank`, `.mc-group`, `.match-grid`)
+- **Difficulty / context** — "week 4", "pre-interview", "day one onboarding", "refresher" — shapes snippet complexity and scaffolding
+- **Explicit constraints** — "no answer key", "must fit on one page", "include the gather example from yesterday"
+
+**If the message is clearly not a content brief** (a question, "go back", "what did you mean by X", or a meta-request) — respond appropriately, then re-print the Step 1b prompt when ready and end the turn again.
+
+**If the user delegates a sub-choice to you** (e.g., *"pick a similar snippet"*, *"choose whatever trace example makes sense"*), make the choice yourself and move on. Do not re-prompt — delegation is an explicit "you decide" signal.
+
+**Budget check.** Before moving to Phase 3, roughly sum the dumped content against the page count and the content budget table in Quick Reference. If the user asked for 1 page but the dump implies 5 parts plus 40 write lines plus a 40-line code block, you have three choices — pick one and commit:
+
+1. **Trim** — drop the weakest activity (the one furthest from the stated learning goal).
+2. **Split** — bump the page count by one and tell the user you did: *"This needed ~2 pages to breathe, so I made it a 2-page worksheet — page 1 is the predict/trace drill, page 2 is the reference card."*
+3. **Ask** — if the trim would lose something important and splitting wasn't offered, call `AskUserQuestion` once with "trim to fit one page / go to two pages" as the options.
+
+Never silently shrink the type below the audience minimum or remove write-line space to make content fit. The whole point of the budget is to protect the sheet from overstuffing — violating it is a worse outcome than a second page.
+
+**Otherwise, proceed to Phase 3 with the parsed content.** Do not loop back to `AskUserQuestion`.
+
+### Phase 3 — Copy the base template
 
 Read `references/base-template.html` and copy it as the literal starting point — do not write the scaffold from scratch. It encodes the print contract, which is the hardest part to get right.
 
@@ -106,7 +161,9 @@ Apply the audience typography by setting the `:root` CSS variables at the top of
 
 Apply the subject preset by setting `--accent` and `--accent-light` from the Quick Reference table.
 
-### Phase 3 — Assemble content
+**Do not touch the print contract** unless switching paper size. The `@page { size: 8.5in 11in; margin: 0.5in }`, the `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, the `break-inside: avoid` rules, and the `@media print` block all work together. Removing `overflow: hidden` brings back page-bleed in browser preview; dropping the `@page` margin to zero forces the user to select "None" in the print dialog or lose content at the edges; setting `.sheet` width to `100%` in `@media print` breaks Safari. If you need to change paper size to A4, swap both `@page { size: 210mm 297mm }` and `.sheet { width: 180mm; height: 267mm }` as a pair — never one without the other.
+
+### Phase 4 — Assemble content
 
 Read `references/components.css`. Pick the components this worksheet actually needs and inline their CSS into the base template's `<style>` block. The core components and when to use each:
 
@@ -125,7 +182,7 @@ Compose content into `.part` blocks. One `.part` per distinct activity. For mult
 
 Don't invent an 11th component unless the existing ten genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
 
-### Phase 4 — Open, print-check, iterate
+### Phase 5 — Open, print-check, iterate
 
 Save the file in the user's current working directory with a descriptive name (`worksheet-git-rebase.html`, `onboarding-day1-handout.html`, `async-await-practice.html`). Then open it:
 
@@ -135,35 +192,55 @@ xdg-open <path-to-file>  # Linux
 start <path-to-file>     # Windows
 ```
 
-Tell the user the exact print dialog settings they need — the defaults will cut content:
+**Verify the page count visually before handing the file back.** Because browser preview now uses `overflow: hidden` on `.sheet`, content that would otherwise bleed onto page 2 will get *clipped* instead — you'll see a truncated last activity at the bottom of the page instead of content flowing. Open the file, scroll through every `.sheet`, and confirm:
 
-> *"Opened in your browser. To export: Cmd+P → **uncheck 'Headers and footers'** → **enable 'Background graphics'** → Save as PDF. Let me know what to adjust."*
+1. Each sheet ends with a complete part (no orphaned part-header, no half-rendered code block, no truncated table).
+2. The user's promised page count matches the number of visible `<section class="sheet">` blocks.
+3. Nothing looks clipped at the bottom edge. If anything looks cut off, go back to Phase 4 and trim or split — do not ship clipped content.
 
-The headers/footers checkbox is what kills most first-time prints — the browser's default date/URL strip eats into the content area. Background graphics is how accent fills and callout tints make it into the PDF.
+If the content is clipped, that's the content-budget telling you the brief was too dense for the stated page count. Go back to Phase 2's budget check and apply the split/trim decision you should have made earlier.
+
+Tell the user the exact print dialog settings for the cleanest PDF:
+
+> *"Opened in your browser. To export: Cmd+P → **enable 'Background graphics'** → Save as PDF. The worksheet uses a 0.5in safe margin baked into the CSS, so any margin preset will work — 'Default' is fine. Let me know what to adjust."*
+
+The `@page` margin handles print-dialog robustness — users no longer need to hunt for the "None" margin setting or worry about the headers/footers strip eating content. Background graphics is still required for accent fills and callout tints.
 
 Common iterations:
 
 - "More space for writing" → increase `--write-line-height`
 - "Too dense" → reduce parts per page or widen `--part-gap`
 - "Add an answer key" → append a new `<section class="sheet">` with the answers
-- "A4 instead of Letter" → swap `@page { size: A4 }` **and** `.sheet { width: 210mm; height: 297mm }`
+- "A4 instead of Letter" → swap `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }`
 - "Make it more fun for younger kids" → swap heading font to Fredoka, widen write lines
 - "Make the code bigger" → bump `.code-block` `font-size` to 11pt and reduce parts per page
+- "Content is getting cut off at the bottom" → overstuffed; split to an extra page, don't shrink type
 
 ## Example
 
-**User prompt:** *"make me a 1-page practice sheet for teaching async/await in Python to a bootcamp cohort — I want them to predict what a couple of snippets print, then trace a small call order by hand"*
+**User prompt:** *"make me a 1-page practice sheet for teaching async/await in Python to a bootcamp cohort"*
 
-**Phase 1 — gather.** The prompt gives us audience (bootcamp cohort), topic (async/await in Python), activity types (predict-the-output, tracing), and page count (1). We still need to confirm:
+**Phase 1a — bounded fields.** The prompt already gives us audience (bootcamp cohort) and page count (1). Subject preset defaults to Code/Systems (Vermillion). Paper size defaults to Letter. Nothing left for `AskUserQuestion` — skip it.
 
-> `AskUserQuestion`: "Quick confirms before I generate this:
-> 1. Cohort week — early (week 1-2) or late (week 6+)? Affects snippet difficulty.
-> 2. Do you want an answer key appended? (second page, separate sheet)
-> 3. Class or cohort name for the header — or leave it generic?"
+**Phase 1b — content dump.** Print the content-dump prompt as plain text and end the turn (no tool calls). The user replies with:
 
-Assume the user says: week 4, no answer key, "Cohort 12 · Async Day".
+> *"Focus on the difference between `asyncio.gather` and running awaits one at a time. I want them to predict the output of this snippet:*
+>
+> ```
+> async def greet(name):
+>     print(f"hi {name}")
+>     await asyncio.sleep(0)
+>     print(f"bye {name}")
+>
+> async def main():
+>     await asyncio.gather(greet("A"), greet("B"))
+> ```
+>
+> *Then a second part where they trace the call order line-by-line for a similar snippet. Week 4 difficulty. Header should say 'Cohort 12 · Async Day'. No answer key."*
 
-**Phase 2 — copy and tune.** Copy `base-template.html`. Set `:root`:
+**Phase 2 — parse.** Extracted from the dump: concrete topic = `gather` vs sequential await; provided code = the `greet` snippet (use verbatim); activity shapes = predict (→ `.predict-table`), trace (→ `.write-area` + `.code-block`); difficulty = week 4; header label = "Cohort 12 · Async Day"; constraint = no answer key. Proceed to Phase 3.
+
+**Phase 3 — copy and tune.** Copy `base-template.html`. Set `:root`:
 
 ```css
 --accent: #D55E00;         /* Code/systems preset */
@@ -174,9 +251,9 @@ Assume the user says: week 4, no answer key, "Cohort 12 · Async Day".
 --write-line-height: 26px;
 ```
 
-Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrains Mono. Leave `@page size: letter` and `.sheet { width: 8.5in; height: 11in }` as-is.
+Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrains Mono. Leave the entire print contract (`@page { size: 8.5in 11in; margin: 0.5in }`, `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, `break-inside: avoid` rules, `@media print` block) untouched.
 
-**Phase 3 — assemble.** Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`. Skip the others.
+**Phase 4 — assemble.** Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`. Skip the others.
 
 **Output (full single-file HTML):**
 
@@ -198,7 +275,7 @@ Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrain
       --body-size: 11pt; --h1-size: 26pt;
       --write-line-height: 26px; --part-gap: 14px;
     }
-    @page { size: letter; margin: 0; }
+    @page { size: 8.5in 11in; margin: 0.5in; }
     html, body { margin: 0; padding: 0; }
     body {
       background: #e0e0e0; font-family: var(--body-font); font-size: var(--body-size);
@@ -206,14 +283,18 @@ Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrain
       -webkit-font-smoothing: antialiased;
     }
     .sheet {
-      width: 8.5in; height: 11in; background: white;
+      width: 7.5in; height: 10in; background: white;
       margin: 16px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+    pre, .code-block, .callout, .predict-table, .draw-box, .match-grid, table {
+      break-inside: avoid; page-break-inside: avoid;
     }
     /* ... all base-template styles ... */
     /* Inlined from components.css: .code-block, .predict-table, .write-area, .callout */
     @media print {
       body { background: white; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .sheet { margin: 0; box-shadow: none; width: 100%; height: 100%; }
+      .sheet { margin: 0; box-shadow: none; }
     }
   </style>
 </head>
@@ -252,12 +333,12 @@ async def main():
 
 asyncio.run(main())</code></pre>
           <table class="predict-table">
-            <thead><tr><th>Line</th><th>Output</th></tr></thead>
+            <thead><tr><th>#</th><th>Printed line</th></tr></thead>
             <tbody>
-              <tr><td>First print in <code>greet("A")</code></td><td></td></tr>
-              <tr><td>First print in <code>greet("B")</code></td><td></td></tr>
-              <tr><td>Second print in <code>greet("A")</code></td><td></td></tr>
-              <tr><td>Second print in <code>greet("B")</code></td><td></td></tr>
+              <tr><td>1</td><td></td></tr>
+              <tr><td>2</td><td></td></tr>
+              <tr><td>3</td><td></td></tr>
+              <tr><td>4</td><td></td></tr>
             </tbody>
           </table>
         </div>
@@ -308,7 +389,8 @@ The same shape generalizes to any tech topic: swap the code, swap the part title
 - **User asks for a non-printable artifact** (Slides, Docs, interactive quiz, LMS, Notion template) → decline explicitly and offer the HTML → PDF alternative. This skill only produces printable paper artifacts.
 - **User asks for a subject outside the presets** (history, music theory, phlebotomy, literature analysis) → use the green default. Never improvise a hex; the Okabe-Ito palette is the only CVD-safe option.
 - **Non-English / RTL / CJK content** → out of scope. Atkinson and Lexend have limited non-Latin glyph coverage; RTL needs a full layout mirror. Tell the user and stop.
-- **Printed output has an extra blank page** → `.sheet` total height exceeds the printable area. Reduce `.page-inner` padding or split into two sheets.
+- **Printed output has an extra blank page** → `.sheet` total height plus its top/bottom margin exceeds `10in` (the printable area inside the 0.5in `@page` margin). Reduce `.page-inner` padding or split content across two sheets — don't shrink `.sheet` below 10in tall, the whole print contract depends on that number.
+- **Content is visually clipped at the bottom of a page in browser preview** → expected behavior with the new `overflow: hidden` on `.sheet`. It means the content budget for that page is exceeded. Split to an additional `<section class="sheet">` or trim the weakest activity; do not remove `overflow: hidden` to "fix" it — that brings back page-bleed.
 - **Fonts aren't loading in print preview** → the user is offline or on `file://`. Fall back to `system-ui, -apple-system, sans-serif` for body and `Georgia, serif` for headings; warn the user that code samples will render in the system monospace.
 - **Color prints differently than the screen preview** → remind the user to enable "Background graphics" in the print dialog. If still wrong, confirm the accent works in grayscale — that's the portability test.
 - **User wants syntax highlighting on code** → pre-bake it as inline `<span class="comment">` tags inside `.code-block`. Never add runtime JS, and never rely on color alone to carry syntactic meaning (italic + color is the minimum).
