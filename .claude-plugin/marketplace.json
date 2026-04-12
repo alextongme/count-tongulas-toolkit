@@ -26,13 +26,13 @@
     {
       "name": "worksheet-maker",
       "source": "./plugins/worksheet-maker",
-      "description": "Create beautiful, printable educational worksheets as self-contained HTML files — for any grade level, subject, or audience.",
+      "description": "Create beautiful, printable educational worksheets as self-contained HTML files — for any grade level, subject, or audience. Primary use case: teaching software engineering and tech concepts.",
       "version": "0.1.0",
       "author": {
         "name": "Alex Tong",
         "url": "https://alextong.me"
       },
-      "category": "content",
+      "category": "education",
       "keywords": ["education", "worksheet", "teaching", "printable", "html"],
       "homepage": "https://alextong.me/toolkit",
       "license": "MIT"

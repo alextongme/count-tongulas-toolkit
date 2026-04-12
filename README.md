@@ -37,6 +37,16 @@ Issues and PRs welcome. Every plugin must:
 3. Follow the Anthropic skill spec: Overview, Quick Reference, Requirements for Outputs, phased Process, worked Example, edge cases.
 4. Pass CI validation (`.github/workflows/validate.yml`).
 
+## Install telemetry
+
+`/plugin marketplace add` does a `git clone` under the hood, so GitHub's traffic API is a zero-code proxy for installs. To check:
+
+```bash
+bash scripts/stats.sh
+```
+
+Reports clones (14-day rolling window), top referrers, and top paths. Requires `gh` CLI authenticated with traffic read permission (repo admin).
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
