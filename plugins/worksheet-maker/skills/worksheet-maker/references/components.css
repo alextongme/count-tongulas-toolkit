@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════
+   Worksheet Maker — 8 core components
+   Copy the blocks you need into the <style> of base-template.html.
+   Each block depends only on the CSS variables defined at :root
+   (see base-template.html for the variable contract).
+
+   Generated with worksheet-maker by Alex Tong — https://alextong.me
+   ═══════════════════════════════════════════════ */
+
+/* ── 1. WRITE LINES — ruled answer space ── */
+.write-area {
+  display: flex;
+  flex-direction: column;
+}
+.write-line {
+  border-bottom: 1px solid var(--rule-light);
+  min-height: var(--write-line-height, 26px);
+}
+.write-line:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── 2. CHECKBOXES — task lists, agree/disagree ── */
+.check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11pt;
+}
+.check-box {
+  width: 13px;
+  height: 13px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── 3. MULTIPLE CHOICE — A/B/C/D bubbles ── */
+.mc-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mc-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11pt;
+}
+.mc-bubble {
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--ink);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10pt;
+  font-weight: 600;
+  color: var(--ink-light);
+  flex-shrink: 0;
+}
+
+/* ── 4. MATCHING — left → right term to definition ── */
+.match-grid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 11pt;
+}
+.match-left {
+  flex: 1;
+  font-weight: 500;
+}
+.match-line {
+  flex: 2;
+  border-bottom: 1px dotted var(--rule);
+  min-height: 14px;
+}
+.match-right {
+  flex: 1;
+  color: var(--ink-light);
+}
+
+/* ── 5. FILL-IN-THE-BLANK — inline underline ── */
+.blank {
+  display: inline-block;
+  min-width: 80px;
+  border-bottom: 1.5px solid var(--ink);
+  padding: 0 4px;
+  margin: 0 2px;
+}
+
+/* ── 6. CALLOUT — tip / note box ── */
+.callout {
+  background: var(--bg-callout);
+  border-left: 3px solid var(--accent);
+  padding: 10px 14px;
+  font-size: 10.5pt;
+  line-height: 1.5;
+  border-radius: 0 4px 4px 0;
+  margin: 10px 0;
+}
+.callout strong {
+  color: var(--accent);
+}
+
+/* ── 7. DRAWING BOX — blank bordered area for sketches / diagrams ── */
+.draw-box {
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  margin: 8px 0;
+  min-height: 120px;
+  background: white;
+}
+
+/* ── 8. PART HEADER — numbered section label ──
+   Already wired in base-template.html. This block documents the
+   variable contract the base template provides; re-declaring it
+   in your worksheet's <style> is unnecessary.
+
+   .part, .part-header, .part-number, .part-title, .part-instruction
+*/

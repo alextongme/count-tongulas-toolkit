@@ -1,0 +1,13 @@
+{
+  "name": "pr-summary-generator",
+  "version": "0.1.0",
+  "description": "Generate structured PR descriptions from the current branch diff — built for AI-assisted development where the PR body is the primary review artifact.",
+  "author": {
+    "name": "Alex Tong",
+    "url": "https://alextong.me"
+  },
+  "homepage": "https://alextong.me/toolkit",
+  "repository": "https://github.com/alextongme/count-tongulas-toolkit",
+  "license": "MIT",
+  "keywords": ["git", "github", "pull-request", "code-review", "pr"]
+}

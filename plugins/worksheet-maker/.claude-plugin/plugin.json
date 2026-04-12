@@ -1,0 +1,13 @@
+{
+  "name": "worksheet-maker",
+  "version": "0.1.0",
+  "description": "Create beautiful, printable educational worksheets as self-contained HTML files — for any grade level, subject, or audience.",
+  "author": {
+    "name": "Alex Tong",
+    "url": "https://alextong.me"
+  },
+  "homepage": "https://alextong.me/toolkit",
+  "repository": "https://github.com/alextongme/count-tongulas-toolkit",
+  "license": "MIT",
+  "keywords": ["education", "worksheet", "teaching", "printable", "html"]
+}
