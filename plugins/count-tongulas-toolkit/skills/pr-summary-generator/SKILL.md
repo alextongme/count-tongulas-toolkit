@@ -1,5 +1,5 @@
 ---
-name: alextongme:pr-summary-generator
+name: pr-summary-generator
 description: >
   Generate a structured pull-request description from the current branch's diff and
   commit history — built for AI-assisted development, where the PR body is the primary
@@ -12,7 +12,7 @@ user_invocable: true
 author: Alex Tong — https://alextong.me
 ---
 
-# alextongme:pr-summary-generator
+# pr-summary-generator
 
 > From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
 

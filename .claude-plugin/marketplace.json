@@ -5,35 +5,21 @@
     "url": "https://alextong.me"
   },
   "metadata": {
-    "description": "Free Claude Code plugins from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
+    "description": "Free Claude Code plugin from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
     "version": "0.1.0"
   },
   "plugins": [
     {
-      "name": "pr-summary-generator",
-      "source": "./plugins/pr-summary-generator",
-      "description": "Generate structured PR descriptions from the current branch diff — built for AI-assisted development where the PR body is the primary review artifact.",
+      "name": "count-tongulas-toolkit",
+      "source": "./plugins/count-tongulas-toolkit",
+      "description": "Count Tongula's Toolkit — bundled skills for AI-assisted development and printable educational worksheets. Includes pr-summary-generator and worksheet-maker.",
       "version": "0.1.0",
       "author": {
         "name": "Alex Tong",
         "url": "https://alextong.me"
       },
-      "category": "dev-workflow",
-      "keywords": ["git", "github", "pull-request", "code-review", "pr"],
-      "homepage": "https://alextong.me/toolkit",
-      "license": "MIT"
-    },
-    {
-      "name": "worksheet-maker",
-      "source": "./plugins/worksheet-maker",
-      "description": "Create beautiful, printable educational worksheets as self-contained HTML files — for any grade level, subject, or audience. Primary use case: teaching software engineering and tech concepts.",
-      "version": "0.1.0",
-      "author": {
-        "name": "Alex Tong",
-        "url": "https://alextong.me"
-      },
-      "category": "education",
-      "keywords": ["education", "worksheet", "teaching", "printable", "html"],
+      "category": "productivity",
+      "keywords": ["claude-code", "skills", "education", "git", "worksheet", "pr", "code-review"],
       "homepage": "https://alextong.me/toolkit",
       "license": "MIT"
     }

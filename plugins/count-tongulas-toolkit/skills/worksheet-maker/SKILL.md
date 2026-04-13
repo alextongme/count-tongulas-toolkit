@@ -1,5 +1,5 @@
 ---
-name: alextongme:worksheet-maker
+name: worksheet-maker
 description: >
   Create beautiful, single-file printable HTML worksheets, handouts, practice
   sheets, study guides, cheat sheets, lab sheets, exercise sheets, or activity
@@ -22,7 +22,7 @@ user_invocable: true
 author: Alex Tong — https://alextong.me
 ---
 
-# alextongme:worksheet-maker
+# worksheet-maker
 
 > From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
 
@@ -105,14 +105,33 @@ Every generated worksheet must satisfy these. They are the difference between a 
 
 Gather requirements in two steps: short bounded answers first, then a single freeform content dump. This split exists because worksheet *content* is the one thing that never fits into multiple-choice — users need to paste code, specs, outlines, or entire lesson notes, and `AskUserQuestion` caps at 2-4 short options per question. The content step bypasses the tool entirely.
 
-**Step 1a — Bounded fields.** Use `AskUserQuestion` to collect only the short answers. Skip any the user already answered in the initial prompt. Ask up to 3 at once. The bounded fields are:
+**Step 1a — Collect bounded fields via `AskUserQuestion`.** The first action of this skill is a single `AskUserQuestion` tool call. Do **not** write a plain-text preface listing the fields, do **not** narrate what you are about to ask, do **not** ask in prose. The tool call *is* the question — a user who invokes this skill expects a clickable multiple-choice menu, and a plain-text ask breaks that contract and forces them to retype everything.
 
-- **Audience** (required) — age range *or* role/context. Examples: "Grade 4", "bootcamp cohort", "L5 engineers at a design review", "first-time conference attendees". Audience drives every typography decision; guessing wrong forces a full rewrite.
-- **Page count** (required) — 1, 2, or 3+ pages.
-- **Paper size** (optional, default Letter) — Letter or A4.
-- **Subject preset** (optional) — Math/Science, ELA, Code/Systems, or Other. Drives the accent color.
+Before calling `AskUserQuestion`, scan the initial prompt for values the user already supplied (e.g. *"for a bootcamp cohort"* sets audience; *"2 pages"* sets page count). Skip any field that is already answered. Build the tool call from only the *missing* fields — up to 3 questions in one call.
 
-Do NOT ask about topic, content, or what to put on the worksheet in this step. That comes next, as a freeform dump.
+Use these exact enumerated option sets. Each option must be clickable, so the wording is fixed. Every field includes an "Other" option so the user can free-type when none fit.
+
+**Audience** — drives every typography decision:
+- `K-12 classroom (grades K–8)`
+- `High school or university course`
+- `Bootcamp / junior dev / early-career IC`
+- `Mid-senior IC / workshop / conference handout`
+- `Other — I'll type it`
+
+**Page count:**
+- `1 page (single-sided handout)`
+- `2 pages (front + back)`
+- `3+ pages (booklet or lab sheet)`
+
+**Subject preset** (drives the accent color):
+- `Code / systems / engineering (vermillion)`
+- `Math / science (blue)`
+- `Language arts / ELA (orange)`
+- `Other — use the general green default`
+
+**Do not ask about paper size in this step.** Letter is the default. Only switch to A4 if the user volunteers it (in the initial prompt or the content dump), which saves a question slot for something that matters more. Do **not** ask about topic or content in this step either — that comes next as a freeform dump.
+
+**If every bounded field is already supplied by the initial prompt, skip `AskUserQuestion` entirely** and go straight to Step 1b. The mandatory-tool-call rule applies only when at least one field is missing; it is not a ceremony for its own sake.
 
 **Step 1b — Content dump.** End Phase 1 by printing the message below as plain text. **Do not call `AskUserQuestion` or any other tool after printing this message.** Ending the turn with only text output makes Claude Code wait for the user's next message, which can be any length or format — exactly what a content brief needs.
 
