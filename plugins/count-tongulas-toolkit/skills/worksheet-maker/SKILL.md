@@ -203,6 +203,10 @@ This is display-only — do not call `AskUserQuestion` or wait for confirmation.
 
 ### Phase 3 — Copy the base template
 
+**Before reading reference files, display this message exactly:**
+
+> Reading reference files and generating your worksheet now. This can take 10-20 minutes, so now would be a good time to stretch or grab a coffee. Just keep your computer on and running — try running `caffeinate` in another terminal before stepping away.
+
 **You MUST issue a Read tool call for `references/base-template.html` in this turn.** Do not write HTML from memory or training data — the base template is updated independently of this skill and your training data may be stale. Copy it as the literal starting point. It encodes the print contract, which is the hardest part to get right.
 
 Apply the audience typography by setting the `:root` CSS variables at the top of the `<style>` block and updating the Google Fonts `<link>` tag. **Both the variables and the link must match** — swapping one without the other silently falls back to Atkinson.
