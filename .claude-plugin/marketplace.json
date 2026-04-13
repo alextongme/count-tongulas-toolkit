@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Free Claude Code plugin from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
-    "version": "0.9.0"
+    "version": "0.8.0"
   },
   "plugins": [
     {
       "name": "count-tongulas-toolkit",
       "source": "./plugins/count-tongulas-toolkit",
       "description": "Count Tongula's Toolkit — bundled skills for AI-assisted development and printable educational worksheets. Includes pr-summary-generator and worksheet-maker.",
-      "version": "0.9.0",
+      "version": "0.8.0",
       "author": {
         "name": "Alex Tong",
         "url": "https://alextong.me"
