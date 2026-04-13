@@ -246,35 +246,15 @@ Don't invent a 16th component unless the existing fifteen genuinely cannot compo
 
 **Footer content.** The footer uses classed spans: `<span class="footer-left">` (monospace, course or worksheet title) and `<span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>` (italic credit line). If the user asks to remove the credit, comply without pushback.
 
-**Height budget tally (mandatory before saving).** After assembling all HTML, silently estimate the rendered height of each sheet against the 960px budget (10in at 96dpi). Use these constants:
+**Overflow guard (mandatory before saving).** After assembling all HTML, eyeball each sheet against these hard limits. Do not do pixel math — just count components:
 
-| Element | Height estimate |
-|---|---|
-| `.page-inner` padding (top + bottom) | 52px |
-| Page header (h1 + subtitle + border + margin) | 100px |
-| Fields row (name/date + margin) | 30px |
-| Page footer | 24px |
-| **Fixed chrome total** | **~206px** |
-| **Available for content** | **~754px** |
+- **Max 3-4 parts per page** (adult/workshop). Fewer for younger audiences (see budget table in Quick Reference).
+- **Max 20 write-lines per page.** Each line eats vertical space fast.
+- **Max 25 code-block lines per page.** Beyond this, split to a second page.
+- **Max 6-8 predict-table / zone-table rows per page.**
+- **When a page mixes 2+ heavy components** (code-block, predict-table, write-area with 5+ lines), reduce each ceiling by ~25%.
 
-Per-component estimates:
-- `.part-header` + `.part-instruction`: 56px per part
-- `.write-line`: `--write-line-height` value (default 24px)
-- `.fill-para` at `line-height: 2`: 33px per line (add 33px for each likely line wrap)
-- `.code-block` line: 19px
-- `.predict-table` / `.zone-table` row: 30px (plus 27px for thead)
-- `.tf-item` / `.mc-item` / `.match-item`: 32px each
-- `.callout`: 44px (single-line) to 72px (multi-line)
-- `.vocab-item`: 34px
-- `.divider`: 13px
-- `.cmd-box`: 44px (single-line) to 84px (multi-line)
-- `.section-label`: 28px
-- `.card-grid` row: ~60px per row of cards
-- `--part-gap` between parts: 14px (not after last part)
-
-This check is **silent** — do not display the tally to the user. Only surface it if a sheet exceeds the threshold: *"Sheet N estimated at ~Xpx — splitting [Part name] to a new page to avoid clipping."*
-
-If any sheet exceeds **880px** (~92% of 960px), treat it as a budget overflow: split content to the next page or trim. The 80px margin accounts for font rendering variance, text wrapping at 672px content width, and CSS rounding. Do not proceed to Phase 4 with a sheet over 880px.
+If a sheet looks overstuffed by these counts, split content to the next page or trim. Never shrink type below the audience minimum to force a fit.
 
 ### Phase 4 — Save, open, hand off to user
 
@@ -282,7 +262,7 @@ Save the file in the user's current working directory with a descriptive name (`
 
 **Self-check before opening.** You cannot see a browser, so verify from the HTML source:
 1. `<section class="sheet">` count matches the planned page count.
-2. Phase 3 height tally for every sheet is under 880px. If skipped or over, go back and fix.
+2. No sheet violates the overflow guard limits from Phase 3. If it does, go back and split or trim.
 3. No `.code-block` exceeds 30 lines on a single-page worksheet.
 4. Every sheet has a `<footer class="page-footer">` with a right-side credit span.
 5. `<title>` matches `<h1>` content.
@@ -329,46 +309,6 @@ Do not declare the worksheet finished without displaying this message and asking
 - "Make it more fun for younger kids" -> swap heading font to Fredoka, widen write lines
 - "Make the code bigger" -> bump `.code-block` `font-size` to 11pt and reduce parts per page
 - "Content is getting cut off at the bottom" -> overstuffed; split to an extra page, don't shrink type
-
-## Example
-
-**User prompt:** *"make me a 1-page practice sheet for teaching async/await in Python to a bootcamp cohort"*
-
-**Phase 1a — bounded fields.** The prompt already gives us audience (bootcamp cohort) and page count (1). Subject preset defaults to Code/Systems (Vermillion). Paper size defaults to Letter. Nothing left for `AskUserQuestion` — skip it.
-
-**Phase 1b — content dump.** Print the content-dump prompt as plain text and end the turn (no tool calls). The user replies with:
-
-> *"Focus on the difference between `asyncio.gather` and running awaits one at a time. I want them to predict the output of this snippet:*
->
-> ```
-> async def greet(name):
->     print(f"hi {name}")
->     await asyncio.sleep(0)
->     print(f"bye {name}")
->
-> async def main():
->     await asyncio.gather(greet("A"), greet("B"))
-> ```
->
-> *Then a second part where they trace the call order line-by-line for a similar snippet. Week 4 difficulty. Header should say 'Cohort 12 · Async Day'. No answer key."*
-
-**Phase 2 — parse.** Extracted from the dump: concrete topic = `gather` vs sequential await; provided code = the `greet` snippet (use verbatim); activity shapes = predict (→ `.predict-table`), trace (→ `.write-area` + `.code-block`); difficulty = week 4; header label = "Cohort 12 · Async Day"; constraint = no answer key. Proceed to Phase 3.
-
-**Phase 3 — read references + build.** Read both reference files (parallel). Copy `base-template.html`, set `:root` to Bootcamp row + Code/Systems preset (`--accent: #D55E00`, `--accent-text: #A34500`), swap Google Fonts link to include Atkinson + Instrument Serif + JetBrains Mono. Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`.
-
-**Output structure (do not reproduce this HTML — use the reference files):**
-
-- `:root` variables set to Bootcamp row (Atkinson body, Instrument Serif headings, JetBrains Mono code, 11pt, 26px write lines) + Code/Systems preset (`--accent: #D55E00`, `--accent-text: #A34500`)
-- Google Fonts link includes all three families
-- Print contract untouched from `base-template.html`
-- Part 01 "Predict the output": user's `greet` snippet in `.code-block` → 4-row `.predict-table`
-- Part 02 "Trace the call order": numbered `fetch` snippet in `.code-block` → `.callout` hint about `gather` scheduling → 5 `.write-line` elements with the first pre-filled
-- Footer: `Cohort 12 · Async Day` left, `Made with alextong.me/toolkit` right
-- Budget: 2 parts + 1 code-block (10 lines) + 1 predict-table (4 rows) + 1 code-block (7 lines) + 1 callout + 5 write-lines ≈ 620px, well under 880px ceiling
-
-**Key patterns demonstrated:** Vermillion accent consumed by `.code-block` border, `.callout strong`, and `.part-number` badge. Code blocks preserve whitespace via `white-space: pre` and print legibly in grayscale (tinted background + left-border + monospace carry without color). Predict-table and write-area both have generous vertical space for handwriting. Callout gives a hint without doing the exercise for the student.
-
-The same shape generalizes: "SQL joins" → `.code-block` query + `.predict-table` rows. "Regex" → `.code-block` pattern + `.mc-group` matches. "Git rebase" → two `.code-block`s with `.code-add`/`.code-del` before/after.
 
 ## Error handling & recovery
 
