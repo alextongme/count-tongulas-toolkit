@@ -27,7 +27,7 @@ allowed-tools: ["Bash(open:*)", "Bash(xdg-open:*)", "Bash(start:*)"]
 
 > From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
 
-**Phases 1 through 5 are sequential. Do not begin HTML generation before completing the content dump and budget check. Do not write HTML from memory — always Read the reference files first. Every `AskUserQuestion` call specified in the process must be shown to the user; do not skip or combine phases.**
+**Phases 1 through 4 are sequential. Do not begin HTML generation before completing the content dump and budget check. Do not write HTML from memory — always Read the reference files first. Every `AskUserQuestion` call specified in the process must be shown to the user; do not skip or combine phases.**
 
 ## Overview
 
@@ -35,10 +35,7 @@ Produces a self-contained HTML worksheet that opens in any browser and prints to
 
 **Paper size defaults to US Letter (8.5 × 11in).** Do not change the paper size unless the user explicitly requests A4 or another size. The base template's `@page { size: 8.5in 11in; margin: 0.5in }` and `.sheet { width: 7.5in; height: 10in }` are calibrated for Letter. When the user opens the HTML in Chrome or Safari and hits Cmd+P with **"Margins: Default"**, the PDF must fill the page perfectly — no scaling, no offset, no extra whitespace.
 
-**Before writing any HTML, read both reference files.** They are not optional — the base template encodes a non-obvious print contract (Safari `.sheet` fallback, element-level `print-color-adjust`, WCAG-compliant ink palette) that is easy to regress if you rewrite the scaffold from scratch.
-
-- `references/base-template.html` — literal starting point. Copy it, change the content, keep the skeleton.
-- `references/components.css` — the core components with the exact HTML markup each one expects. Drop them in only as an activity demands.
+**Before writing any HTML, read both reference files** (`references/base-template.html` and `references/components.css`). They encode the print contract and component markup — do not write from memory.
 
 ## Quick Reference
 
@@ -75,10 +72,10 @@ Produces a self-contained HTML worksheet that opens in any browser and prints to
 | Teaching a code concept | Use `.code-block` + `.predict-table` + `.write-area` for tracing |
 | Audience unspecified | Ask via `AskUserQuestion` before writing any HTML |
 | Activity type not in the components | Compose from existing components; don't invent new scaffolds |
-| A4 instead of Letter | Swap **both** `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }` — one without the other silently fails in Safari |
+| A4 instead of Letter | See A4 swap in Phase 3 print contract — both `@page` and `.sheet` must change as a pair |
 | Answer key | Append a final `<section class="sheet">` at the end with a distinct header |
 
-**Content budget per page.** The most common failure mode of a worksheet is not typography — it's overstuffing. The printable area is fixed (7.5in × 10in on Letter, after the 0.5in safe margin), so everything you add competes for the same pixels. Use these ceilings as a hard budget when planning Phase 4. If the dump exceeds the budget, split across pages or drop the weakest activity — never squeeze everything onto one page by shrinking type below the minimum.
+**Content budget per page.** The most common failure mode of a worksheet is not typography — it's overstuffing. The printable area is fixed (7.5in × 10in on Letter, after the 0.5in safe margin), so everything you add competes for the same pixels. Use these ceilings as a hard budget when planning Phase 3. If the dump exceeds the budget, split across pages or drop the weakest activity — never squeeze everything onto one page by shrinking type below the minimum.
 
 | Per page | Parts | Write-lines | Code-block lines | Predict-table rows | Full-width callouts |
 |---|---|---|---|---|---|
@@ -201,34 +198,29 @@ Before generating HTML, display the parsed plan as a brief transition message:
 
 This is display-only — do not call `AskUserQuestion` or wait for confirmation. The user can interject if something is wrong; otherwise proceed to Phase 3.
 
-### Phase 3 — Copy the base template
+### Phase 3 — Read references, build the worksheet
 
 **Before reading reference files, display this message exactly:**
 
 > Reading reference files and generating your worksheet now. This can take 10-20 minutes, so now would be a good time to stretch or grab a coffee. Just keep your computer on and running — try running `caffeinate` in another terminal before stepping away.
 
-**You MUST issue a Read tool call for `references/base-template.html` in this turn.** Do not write HTML from memory or training data — the base template is updated independently of this skill and your training data may be stale. Copy it as the literal starting point. It encodes the print contract, which is the hardest part to get right.
+**Issue Read calls for both reference files in this turn — in parallel if your tool supports it:**
+- `references/base-template.html` — literal starting point. Copy it, change the content. It encodes the print contract, which is the hardest part to get right.
+- `references/components.css` — the component library with exact HTML markup. Inline the blocks you use into the `<style>`.
 
-Apply the audience typography by setting the `:root` CSS variables at the top of the `<style>` block and updating the Google Fonts `<link>` tag. **Both the variables and the link must match** — swapping one without the other silently falls back to Atkinson.
+Do not write HTML from memory or training data — both files are updated independently of this skill and your training data may be stale.
 
-Apply the subject preset by setting `--accent`, `--accent-text`, and `--accent-light` from the Quick Reference table. The `--accent-text` variable is a darkened variant that passes WCAG AA 4.5:1 on white — it is used automatically by `.callout strong`, `.section-label`, and `.card-label` via `var(--accent-text, var(--accent))`.
+**Apply audience typography** by setting `:root` CSS variables and updating the Google Fonts `<link>` tag. Every font in `:root` variables must also appear in the `<link>` URL — mismatched fonts silently fall back to Atkinson.
 
-**Attribution comment.** The first line inside `<head>` must be `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->`. This is non-negotiable — add it now, not as an afterthought.
+**Apply subject preset** by setting `--accent`, `--accent-text`, and `--accent-light` from the Quick Reference table. `--accent-text` is a darkened variant (WCAG AA 4.5:1 on white) used automatically by `.callout strong`, `.section-label`, and `.card-label`.
 
-**Do not touch the print contract.** The CSS rules below work together to produce a perfect Letter-size PDF when the user prints with "Margins: Default":
+**Print contract — do not touch.** These rules produce a perfect Letter-size PDF when printed with "Margins: Default":
+- `@page { size: 8.5in 11in; margin: 0.5in }` + `.sheet { width: 7.5in; height: 10in; overflow: hidden }` + `break-inside: avoid` on blocks + `@media print { print-color-adjust: exact }`
+- For A4: swap **both** `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }` as a pair — one without the other fails in Safari.
 
-- `@page { size: 8.5in 11in; margin: 0.5in }` — defines the page box and safe zone
-- `.sheet { width: 7.5in; height: 10in; overflow: hidden }` — fits exactly inside the 0.5in margins; explicit dims are the Safari fallback since Safari ignores `@page size`
-- `break-inside: avoid` on block components — prevents mid-element page breaks
-- `@media print { body { print-color-adjust: exact } }` — preserves backgrounds/borders
+**Attribution comment.** First line inside `<head>`: `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->`
 
-Removing `overflow: hidden` brings back page-bleed in browser preview; dropping the `@page` margin to zero forces the user to select "None" in the print dialog or lose content at the edges; setting `.sheet` width to `100%` in `@media print` breaks Safari. **Never change `@page size` or `.sheet` dimensions unless the user explicitly requests A4** — in that case swap both `@page { size: 210mm 297mm }` and `.sheet { width: 180mm; height: 267mm }` as a pair.
-
-**Font verify.** Before proceeding to Phase 4, check: every font family referenced in `:root` CSS variables (`--body-font`, `--heading-font`, and any code font) must appear in the Google Fonts `<link>` URL. If a variable names a font not in the link, fix the link now. Swapping one without the other silently falls back to Atkinson.
-
-### Phase 4 — Assemble content
-
-**You MUST issue a Read tool call for `references/components.css` in this turn.** Do not inline component CSS from memory. Pick the components this worksheet actually needs and inline their CSS into the base template's `<style>` block. The core components and when to use each:
+**Assemble content using these components** (inline only the CSS you need from `components.css`):
 
 1. `.write-area` / `.write-line` — ruled answer space for free-response questions
 2. `.check-group` / `.check-item` / `.check-box` — checkbox task lists, exit checklists, to-do items (`.check-box` is the visible square; don't omit it)
@@ -282,20 +274,19 @@ Per-component estimates:
 
 This check is **silent** — do not display the tally to the user. Only surface it if a sheet exceeds the threshold: *"Sheet N estimated at ~Xpx — splitting [Part name] to a new page to avoid clipping."*
 
-If any sheet exceeds **880px** (~92% of 960px), treat it as a budget overflow: split content to the next page or trim. The 80px margin accounts for font rendering variance, text wrapping at 672px content width, and CSS rounding. Do not proceed to Phase 5 with a sheet over 880px.
+If any sheet exceeds **880px** (~92% of 960px), treat it as a budget overflow: split content to the next page or trim. The 80px margin accounts for font rendering variance, text wrapping at 672px content width, and CSS rounding. Do not proceed to Phase 4 with a sheet over 880px.
 
-### Phase 5 — Save, open, hand off to user
+### Phase 4 — Save, open, hand off to user
 
 Save the file in the user's current working directory with a descriptive name (`worksheet-git-rebase.html`, `onboarding-day1-handout.html`, `async-await-practice.html`).
 
-**Self-check before opening.** You cannot see a browser, so verify what you can from the HTML source:
-1. Count `<section class="sheet">` blocks — must match the planned page count.
-2. **Full budget recount per sheet.** For each `<section class="sheet">`, count: (a) `.part` blocks, (b) `.write-line` elements, (c) lines inside each `.code-block`, (d) `<tr>` rows in each table (excluding `<thead>`), (e) `.callout` elements, (f) `.tf-item` / `.mc-item` / `.match-item` elements. Compare each count against the audience ceiling (apply the 25% combined-load reduction if 2+ heavy component types are present). If any count exceeds its ceiling, split or trim before opening.
-3. **Height tally check.** Verify the Phase 4 height tally for every sheet is under 880px. If you skipped the tally or it exceeds 880px, go back and fix.
-4. No `.code-block` exceeds 30 lines on a single-page worksheet.
-5. Every sheet has a `<footer class="page-footer">` with a right-side credit span.
-6. The `<title>` matches the `<h1>` content.
-7. The attribution comment `<!-- Generated with worksheet-maker ... -->` is the first line inside `<head>`.
+**Self-check before opening.** You cannot see a browser, so verify from the HTML source:
+1. `<section class="sheet">` count matches the planned page count.
+2. Phase 3 height tally for every sheet is under 880px. If skipped or over, go back and fix.
+3. No `.code-block` exceeds 30 lines on a single-page worksheet.
+4. Every sheet has a `<footer class="page-footer">` with a right-side credit span.
+5. `<title>` matches `<h1>` content.
+6. Attribution comment is the first line inside `<head>`.
 
 If any check fails, fix the HTML before opening.
 
@@ -327,14 +318,14 @@ Use this exact format (adapt the path and page details). **The file path MUST be
 
 **What would you like to change?** Layout, spacing, content, font sizes, additional pages — just say the word.
 
-Do not declare the worksheet finished without displaying this message and asking for changes. The user's visual check catches what the self-check cannot (clipping, spacing feel, font rendering). If the user reports content clipped at the bottom, go back to Phase 4 and split or trim — do not remove `overflow: hidden`.
+Do not declare the worksheet finished without displaying this message and asking for changes. The user's visual check catches what the self-check cannot (clipping, spacing feel, font rendering). If the user reports content clipped at the bottom, go back to Phase 3 and split or trim — do not remove `overflow: hidden`.
 
 **Common iterations:**
 
 - "More space for writing" -> increase `--write-line-height`
 - "Too dense" -> reduce parts per page or widen `--part-gap`
 - "Add an answer key" -> append a new `<section class="sheet">` with the answers
-- "A4 instead of Letter" -> swap `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }`
+- "A4 instead of Letter" -> see Phase 3 print contract for the exact A4 swap pair
 - "Make it more fun for younger kids" -> swap heading font to Fredoka, widen write lines
 - "Make the code bigger" -> bump `.code-block` `font-size` to 11pt and reduce parts per page
 - "Content is getting cut off at the bottom" -> overstuffed; split to an extra page, don't shrink type
@@ -363,149 +354,21 @@ Do not declare the worksheet finished without displaying this message and asking
 
 **Phase 2 — parse.** Extracted from the dump: concrete topic = `gather` vs sequential await; provided code = the `greet` snippet (use verbatim); activity shapes = predict (→ `.predict-table`), trace (→ `.write-area` + `.code-block`); difficulty = week 4; header label = "Cohort 12 · Async Day"; constraint = no answer key. Proceed to Phase 3.
 
-**Phase 3 — copy and tune.** Copy `base-template.html`. Set `:root`:
+**Phase 3 — read references + build.** Read both reference files (parallel). Copy `base-template.html`, set `:root` to Bootcamp row + Code/Systems preset (`--accent: #D55E00`, `--accent-text: #A34500`), swap Google Fonts link to include Atkinson + Instrument Serif + JetBrains Mono. Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`.
 
-```css
---accent: #D55E00;         /* Code/systems preset */
---accent-text: #A34500;    /* AA-safe text variant */
---accent-light: #fbe9df;
---body-font: 'Atkinson Hyperlegible', system-ui, sans-serif;
---heading-font: 'Instrument Serif', Georgia, serif;
---body-size: 11pt;
---write-line-height: 26px;
-```
+**Output structure (do not reproduce this HTML — use the reference files):**
 
-Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrains Mono (all three must be in the link). Leave the entire print contract (`@page { size: 8.5in 11in; margin: 0.5in }`, `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, `break-inside: avoid` rules, `@media print` block) untouched.
+- `:root` variables set to Bootcamp row (Atkinson body, Instrument Serif headings, JetBrains Mono code, 11pt, 26px write lines) + Code/Systems preset (`--accent: #D55E00`, `--accent-text: #A34500`)
+- Google Fonts link includes all three families
+- Print contract untouched from `base-template.html`
+- Part 01 "Predict the output": user's `greet` snippet in `.code-block` → 4-row `.predict-table`
+- Part 02 "Trace the call order": numbered `fetch` snippet in `.code-block` → `.callout` hint about `gather` scheduling → 5 `.write-line` elements with the first pre-filled
+- Footer: `Cohort 12 · Async Day` left, `Made with alextong.me/toolkit` right
+- Budget: 2 parts + 1 code-block (10 lines) + 1 predict-table (4 rows) + 1 code-block (7 lines) + 1 callout + 5 write-lines ≈ 620px, well under 880px ceiling
 
-**Phase 4 — assemble.** Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`. Skip the others.
+**Key patterns demonstrated:** Vermillion accent consumed by `.code-block` border, `.callout strong`, and `.part-number` badge. Code blocks preserve whitespace via `white-space: pre` and print legibly in grayscale (tinted background + left-border + monospace carry without color). Predict-table and write-area both have generous vertical space for handwriting. Callout gives a hint without doing the exercise for the student.
 
-**Output (full single-file HTML):**
-
-```html
-<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Async / Await Practice</title>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --ink: #1a1a1a; --ink-light: #555; --ink-muted: #595959;
-      --rule: #d0d0d0; --rule-light: #e8e8e8;
-      --accent: #D55E00; --accent-text: #A34500; --accent-light: #fbe9df; --bg-callout: #f5f5f0;
-      --body-font: 'Atkinson Hyperlegible', system-ui, sans-serif;
-      --heading-font: 'Instrument Serif', Georgia, serif;
-      --body-size: 11pt; --h1-size: 26pt;
-      --write-line-height: 26px; --part-gap: 14px;
-    }
-    @page { size: 8.5in 11in; margin: 0.5in; }
-    html, body { margin: 0; padding: 0; }
-    body {
-      background: #e0e0e0; font-family: var(--body-font); font-size: var(--body-size);
-      color: var(--ink); line-height: 1.45; text-align: left;
-      -webkit-font-smoothing: antialiased;
-    }
-    .sheet {
-      width: 7.5in; height: 10in; background: white;
-      margin: 16px auto; box-shadow: 0 4px 20px rgba(0,0,0,0.12);
-      overflow: hidden;
-    }
-    pre, .code-block, .callout, .predict-table, .draw-box, .match-grid, table {
-      break-inside: avoid; page-break-inside: avoid;
-    }
-    /* ... all base-template styles ... */
-    /* Inlined from components.css: .code-block, .predict-table, .write-area, .callout */
-    @media print {
-      body { background: white; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-      .sheet { margin: 0; box-shadow: none; }
-    }
-  </style>
-</head>
-<body>
-  <section class="sheet">
-    <div class="page-inner">
-
-      <header class="page-header">
-        <div>
-          <h1>Async / Await Practice</h1>
-          <div class="subtitle">Cohort 12 · Async Day</div>
-        </div>
-        <div class="page-number">Page <span>1</span> of 1</div>
-      </header>
-
-      <div class="fields-row">
-        <div class="field"><span class="field-label">Name</span><span class="field-line"></span></div>
-        <div class="field"><span class="field-label">Date</span><span class="field-line"></span></div>
-      </div>
-
-      <div class="content">
-
-        <div class="part">
-          <div class="part-header">
-            <span class="part-number">01</span>
-            <span class="part-title">Predict the output</span>
-          </div>
-          <div class="part-instruction">For each snippet, write what Python prints. Assume the event loop runs to completion.</div>
-          <pre class="code-block"><code>async def greet(name):
-    print(f"hi {name}")
-    await asyncio.sleep(0)
-    print(f"bye {name}")
-
-async def main():
-    await asyncio.gather(greet("A"), greet("B"))
-
-asyncio.run(main())</code></pre>
-          <table class="predict-table">
-            <thead><tr><th>#</th><th>Printed line</th></tr></thead>
-            <tbody>
-              <tr><td>1</td><td></td></tr>
-              <tr><td>2</td><td></td></tr>
-              <tr><td>3</td><td></td></tr>
-              <tr><td>4</td><td></td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="part">
-          <div class="part-header">
-            <span class="part-number">02</span>
-            <span class="part-title">Trace the call order</span>
-          </div>
-          <div class="part-instruction">Walk through <code>main()</code> below and list each line number in the order it executes. The first one is done for you.</div>
-          <pre class="code-block"><code>1  async def fetch(url):
-2      print(f"start {url}")
-3      await asyncio.sleep(1)
-4      print(f"done  {url}")
-5
-6  async def main():
-7      await asyncio.gather(fetch("a"), fetch("b"))</code></pre>
-          <div class="callout"><strong>Hint:</strong> <code>asyncio.gather</code> schedules both coroutines before either hits its first <code>await</code>.</div>
-          <div class="write-area">
-            <div class="write-line">7, 2, </div>
-            <div class="write-line"></div>
-            <div class="write-line"></div>
-            <div class="write-line"></div>
-            <div class="write-line"></div>
-          </div>
-        </div>
-
-      </div>
-
-      <footer class="page-footer">
-        <span class="footer-left">Cohort 12 · Async Day</span>
-        <span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>
-      </footer>
-
-    </div>
-  </section>
-</body>
-</html>
-```
-
-**What this demonstrates.** The Vermillion accent comes from the Code/Systems preset, consumed by every accent element (the `.code-block` border, the `.callout` strong, the `.part-header`). The `.code-block` preserves whitespace via `white-space: pre` and prints legibly in grayscale because the tinted background + left-border + monospace font all carry without relying on color. The `.predict-table` and `.write-area` both have generous vertical space for handwriting. The `.callout` gives a hint without doing the exercise for the student. Nothing here would work as a K-12 worksheet — everything here IS the primary use case.
-
-The same shape generalizes to any tech topic: swap the code, swap the part titles, swap the hint. "Teaching SQL joins" → `.code-block` with a query + `.predict-table` with sample rows → row output. "Teaching regex" → `.code-block` with the pattern + `.mc-group` for matches. "Teaching git rebase" → two `.code-block` elements with `.code-add` / `.code-del` lines showing before/after.
+The same shape generalizes: "SQL joins" → `.code-block` query + `.predict-table` rows. "Regex" → `.code-block` pattern + `.mc-group` matches. "Git rebase" → two `.code-block`s with `.code-add`/`.code-del` before/after.
 
 ## Error handling & recovery
 
@@ -520,13 +383,13 @@ The same shape generalizes to any tech topic: swap the code, swap the part title
 | 2 | Non-English / RTL / CJK content | Stop. Atkinson/Lexend have limited non-Latin glyph coverage; RTL needs a full layout mirror. Tell the user. |
 | 3 | Reference files not found at expected path | Stop. "Reference files missing. Reinstall the skill or check that `references/` is alongside the skill file." |
 | 3 | Google Fonts link does not match CSS variables | Fix the link before proceeding. Mismatched fonts silently fall back to Atkinson. |
-| 4 | Content requires a component not in the 10 available | Compose from existing components. Do not invent an 11th unless genuinely impossible. |
-| 4 | Code snippet exceeds 30 lines on a single page | Truncate with `...` and a callout ("full code on reverse"), or split to a second page. Never shrink code font below 9pt. |
-| 5 | `open` command fails (headless, SSH, WSL) | Print the absolute file path and tell the user to open it manually. Do not retry. |
-| 5 | Content clipped at bottom of `.sheet` in browser | Go back to Phase 4 and split or trim. Do NOT remove `overflow: hidden` — that brings back page-bleed. |
-| 5 | Printed output has extra blank page | `.sheet` height + margin exceeds printable area. Reduce `.page-inner` padding or split. Don't shrink `.sheet` below 10in. |
-| 5 | Fonts not loading in print preview (offline / `file://`) | Fall back to `system-ui, sans-serif` body / `Georgia, serif` headings. Warn the user. |
-| 5 | Color prints differently than screen | Remind user to enable "Background graphics." Confirm accent works in grayscale. |
+| 3 | Content requires a component not in the 15 available | Compose from existing components. Do not invent a 16th unless genuinely impossible. |
+| 3 | Code snippet exceeds 30 lines on a single page | Truncate with `...` and a callout ("full code on reverse"), or split to a second page. Never shrink code font below 9pt. |
+| 4 | `open` command fails (headless, SSH, WSL) | Print the absolute file path and tell the user to open it manually. Do not retry. |
+| 4 | Content clipped at bottom of `.sheet` in browser | Go back to Phase 3 and split or trim. Do NOT remove `overflow: hidden` — that brings back page-bleed. |
+| 4 | Printed output has extra blank page | `.sheet` height + margin exceeds printable area. Reduce `.page-inner` padding or split. Don't shrink `.sheet` below 10in. |
+| 4 | Fonts not loading in print preview (offline / `file://`) | Fall back to `system-ui, sans-serif` body / `Georgia, serif` headings. Warn the user. |
+| 4 | Color prints differently than screen | Remind user to enable "Background graphics." Confirm accent works in grayscale. |
 | Any | User asks for a non-printable artifact (Slides, Docs, quiz, LMS) | Decline. This skill only produces printable paper artifacts. Offer HTML -> PDF alternative. |
 | Any | Subject outside presets (history, music, etc.) | Use the green default (`#009E73`). Never improvise a hex — Okabe-Ito is the only CVD-safe option. |
 | Any | User wants syntax highlighting | Pre-bake as inline `<span class="comment">` tags. Never add runtime JS. Use italic + color, never color alone. |
