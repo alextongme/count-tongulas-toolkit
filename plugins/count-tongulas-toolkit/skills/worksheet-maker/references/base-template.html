@@ -9,11 +9,12 @@
   <!--
     FONT PAIRS — swap the link tag and --body-font/--heading-font for audience:
 
-    K-5:       family=Fredoka:wght@400;500;600&family=Lexend:wght@400;500
-    6-12:      family=DM+Serif+Display&family=Atkinson+Hyperlegible:wght@400;700
-    Adult/pro: family=Instrument+Serif&family=Atkinson+Hyperlegible:wght@400;700
+    K-5:           family=Fredoka:wght@400;500;600&family=Lexend:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap
+    6-12:          family=DM+Serif+Text&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap
+    Adult/pro:     family=Instrument+Serif&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;500;600&display=swap
+    University/IC: family=Instrument+Serif&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap
   -->
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Instrument+Serif&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
     /* ═══════════════════════════════════════════════
@@ -31,11 +32,15 @@
       --rule: #d0d0d0;
       --rule-light: #e8e8e8;
 
-      /* Accent — pick ONE from the Okabe-Ito CVD-safe palette */
+      /* Accent — pick ONE from the Okabe-Ito CVD-safe palette.
+         --accent is for borders, fills, decorative elements.
+         --accent-text is darkened to pass WCAG AA 4.5:1 on white for text. */
       --accent: #009E73;            /* default: general green */
+      --accent-text: #006B4F;       /* AA-safe text variant */
       --accent-light: #e8f5ee;
-      /* math / science:  #0072B2  (light #e6f2f9) */
-      /* ela / lang arts: #E69F00  (light #fdf3e0) */
+      /* math / science:  #0072B2  text #0072B2  (light #e6f2f9) */
+      /* ela / lang arts: #E69F00  text #946500  (light #fdf3e0) */
+      /* code / systems:  #D55E00  text #A34500  (light #fbe9df) */
 
       /* Callout backgrounds */
       --bg-callout: #f5f5f0;
@@ -59,9 +64,10 @@
        preview. The printed PDF enforces its own page boundary, but the
        on-screen preview won't unless we clip here.
 
-       Print strategy: 0.5in `@page` margin is a hard safe zone — any
-       browser print-dialog margin preset ("Default", "None", "Minimum",
-       custom) will still leave content inside the printable area. The
+       Print strategy: 0.5in `@page` margin is a hard safe zone.
+       IMPORTANT: Chrome and Safari override @page margin with the
+       print-dialog selection. Users MUST select "Margins: Default"
+       (not "None") for the layout to fill the page correctly. The
        0.5in choice matches Letter and A4 equally well and absorbs the
        header/footer strip some browsers add in default mode.
     */
@@ -80,7 +86,7 @@
       font-family: var(--body-font);
       font-size: var(--body-size);
       color: var(--ink);
-      line-height: 1.5;
+      line-height: 1.45;
       text-align: left;                    /* never justify — print spacing */
       -webkit-font-smoothing: antialiased;
     }
@@ -101,7 +107,7 @@
     }
 
     .page-inner {
-      padding: 18px 24px 14px;             /* small visual breathing room on top of the @page margin */
+      padding: 28px 38px 24px;             /* generous breathing room on top of the @page margin */
       height: 100%;
       box-sizing: border-box;
       display: flex;
@@ -116,6 +122,8 @@
     .predict-table,
     .draw-box,
     .match-grid,
+    .cmd-box,
+    .card,
     table {
       break-inside: avoid;
       page-break-inside: avoid;
@@ -133,9 +141,9 @@
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      padding-bottom: 10px;
+      padding-bottom: 12px;
       border-bottom: 2.5px solid var(--ink);
-      margin-bottom: 16px;
+      margin-bottom: 18px;
       flex-shrink: 0;
     }
     .page-header h1 {
@@ -155,10 +163,11 @@
       margin-top: 3px;
     }
     .page-number {
-      font-size: 10pt;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
       color: var(--ink-muted);
       white-space: nowrap;
-      margin-top: 4px;
+      padding-bottom: 2px;
     }
     .page-number span { font-weight: 600; color: var(--ink); }
 
@@ -169,9 +178,17 @@
       padding-top: 6px;
       display: flex;
       justify-content: space-between;
-      font-size: 9pt;
+      align-items: center;
+      font-size: 8.5px;
       color: var(--ink-muted);
       margin-top: auto;
+    }
+    .page-footer .footer-left {
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.3px;
+    }
+    .page-footer .footer-right {
+      font-style: italic;
     }
 
     /* ── SECTION PARTS ── */
@@ -185,7 +202,8 @@
       margin-bottom: 8px;
     }
     .part-number {
-      font-size: 10pt;
+      font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+      font-size: 9.5px;
       font-weight: 600;
       color: white;
       background: #000;
@@ -209,7 +227,8 @@
       color: var(--ink-light);
       font-style: italic;
       margin-bottom: 8px;
-      line-height: 1.4;
+      line-height: 1.45;
+      max-width: 65ch;
     }
 
     /* ── NAME / DATE FIELDS ── */
@@ -287,8 +306,8 @@
       </div>
 
       <footer class="page-footer">
-        <span>Course or school name</span>
-        <span style="font-size: 7pt; color: var(--ink-muted);">Made with alextong.me/toolkit</span>
+        <span class="footer-left">Course or school name</span>
+        <span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>
       </footer>
 
     </div>

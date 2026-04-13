@@ -51,7 +51,7 @@
 .check-box {
   width: 13px;
   height: 13px;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--ink);
   border-radius: 2px;
   flex-shrink: 0;
   print-color-adjust: exact;
@@ -79,7 +79,7 @@
 .mc-bubble {
   width: 22px;
   height: 22px;
-  border: 1.5px solid #000;
+  border: 1.5px solid var(--ink);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -136,16 +136,23 @@
 .callout {
   background: var(--bg-callout);
   border-left: 3px solid var(--accent);
-  padding: 10px 14px;
+  padding: 8px 12px;
   font-size: 10.5pt;
-  line-height: 1.5;
+  line-height: 1.45;
   border-radius: 0 4px 4px 0;
-  margin: 10px 0;
+  margin: 8px 0;
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
 .callout strong {
-  color: var(--accent);
+  color: var(--accent-text, var(--accent));
+}
+.callout code {
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 9.5pt;
+  background: rgba(0,0,0,0.06);
+  padding: 1px 4px;
+  border-radius: 2px;
 }
 
 /* ── 7. DRAWING BOX — blank bordered area for sketches / diagrams ──
@@ -157,6 +164,8 @@
   border-radius: 4px;
   margin: 8px 0;
   min-height: 120px;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 /* ── 8. PART HEADER — numbered section label ──
@@ -185,11 +194,11 @@
 .code-block {
   font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
   font-size: 10pt;
-  line-height: 1.5;
+  line-height: 1.4;
   background: #f5f5f0;
   border-left: 3px solid var(--accent);
   padding: 10px 14px;
-  margin: 10px 0;
+  margin: 8px 0;
   white-space: pre;
   overflow-x: auto;
   border-radius: 0 4px 4px 0;
@@ -218,7 +227,7 @@
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
-.code-add::before { content: "+ "; color: #009E73; font-weight: 700; }
+.code-add::before { content: "+ "; color: #006B4F; font-weight: 700; }
 .code-del {
   display: block;
   background: #fbe9df;
@@ -230,7 +239,7 @@
   print-color-adjust: exact;
   -webkit-print-color-adjust: exact;
 }
-.code-del::before { content: "- "; color: #D55E00; font-weight: 700; text-decoration: none; }
+.code-del::before { content: "- "; color: #A34500; font-weight: 700; text-decoration: none; }
 
 /* ── 10. PREDICT-THE-OUTPUT TABLE — two-column input → ___ ──
    Pairs naturally with .code-block for async/await, recursion, regex drills.
@@ -261,7 +270,7 @@
   padding: 10px;
   border-bottom: 1px solid var(--rule-light);
   vertical-align: top;
-  min-height: 28px;
+  height: 28px;                          /* height on td acts as min-height in table layout */
 }
 .predict-table td:first-child {
   font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
@@ -269,4 +278,104 @@
 }
 .predict-table td:last-child {
   border-left: 1px dotted var(--rule);
+  min-width: 120px;
+}
+
+/* ── 11. DIVIDER — horizontal rule between parts ──
+   Use between `.part` blocks on dense pages for visual breathing room.
+   Markup:
+     <hr class="divider">
+     <hr class="divider strong">  <!-- heavier weight -->
+*/
+.divider {
+  border: none;
+  border-top: 1px solid var(--rule-light);
+  margin: 6px 0;
+}
+.divider.strong {
+  border-top: 1.5px solid var(--rule);
+}
+
+/* ── 12. TERMINAL COMMAND BOX — dark background shell commands ──
+   For CLI demos, install instructions, or terminal output.
+   Markup:
+     <div class="cmd-box"><span class="prompt">$ </span><span class="cmd">git rebase -i HEAD~3</span></div>
+*/
+.cmd-box {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 10pt;
+  padding: 10px 14px;
+  border-radius: 4px;
+  margin: 8px 0;
+  line-height: 1.4;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.cmd-box .prompt {
+  color: var(--accent);
+  user-select: none;
+}
+.cmd-box .cmd {
+  color: #f0f0f0;
+}
+
+/* ── 13. SECTION LABEL — small-caps colored category heading ──
+   Use for scorecard categories, rubric sections, or themed groups.
+   Markup:
+     <div class="section-label">Signal — does it tell Claude things code can't?</div>
+*/
+.section-label {
+  font-size: 10.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1.5px solid var(--accent);
+  color: var(--accent-text, var(--accent));
+}
+
+/* ── 14. CARD GRID — multi-column option/choice cards ──
+   Use for track selection, comparison layouts, or reference grids.
+   Markup:
+     <div class="card-grid cols-3">
+       <div class="card">
+         <div class="card-label">Option A</div>
+         <div>Description text here.</div>
+       </div>
+       <div class="card">
+         <div class="card-label">Option B</div>
+         <div>Description text here.</div>
+       </div>
+       <div class="card">
+         <div class="card-label">Option C</div>
+         <div>Description text here.</div>
+       </div>
+     </div>
+*/
+.card-grid {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0;
+}
+.card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.card {
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 10.5pt;
+  line-height: 1.45;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.card-label {
+  font-size: 9.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--accent-text, var(--accent));
+  margin-bottom: 2px;
 }
