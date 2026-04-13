@@ -155,6 +155,18 @@
   border-radius: 2px;
 }
 
+/* ── 6b. CALLOUT WARN — red variant for gotchas, "don't do this", common mistakes ──
+   Markup:
+     <div class="callout warn"><strong>Gotcha:</strong> don't forget to close the connection.</div>
+*/
+.callout.warn {
+  border-left-color: #D55E00;
+  background: #fbe9df;
+}
+.callout.warn strong {
+  color: #A34500;
+}
+
 /* ── 7. DRAWING BOX — blank bordered area for sketches / diagrams ──
    Markup:
      <div class="draw-box"></div>

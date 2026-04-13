@@ -1,6 +1,6 @@
 {
   "name": "count-tongulas-toolkit",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Count Tongula's Toolkit — free Claude Code skills from Alex Tong. Includes PR summary generator and worksheet maker, with more on the way.",
   "author": {
     "name": "Alex Tong",

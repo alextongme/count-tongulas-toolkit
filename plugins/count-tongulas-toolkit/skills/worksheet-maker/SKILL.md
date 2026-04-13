@@ -99,12 +99,15 @@ Every generated worksheet must satisfy these. They are the difference between a 
 
 1. **Jump to the task.** Minimize preamble — the reader should be writing within 30 seconds of picking up the sheet.
 2. **Generous write space.** Ruled lines, blank boxes, and margins sized for real handwriting or real code-tracing. When in doubt, bigger.
-3. **Hierarchy through typography, not decoration.** Font weight, size, and spacing guide the eye. No clip art, heavy borders, or gratuitous icons.
-4. **Survives grayscale.** Every design choice must read clearly in black-and-white. Color is a bonus, never a dependency. For diff hunks, use the `+`/`-` prefixes in `.code-add` / `.code-del` — they carry the meaning even when the tint drops out.
-5. **Scannable structure.** Numbered `.part` blocks, labeled sections, clear write-lines. A reader flipping through should instantly know where they are.
-6. **Accessibility defaults are always on.** Atkinson Hyperlegible / Lexend / Inter for body copy; 11pt minimum body (10.5pt allowed only for conference handouts); left-aligned (never justified — justification creates uneven spacing in print); Okabe-Ito palette for any color coding; WCAG AA contrast (body text on white ≥ 4.5:1).
-7. **Exact paper size via pure `@page` + `.sheet` fallback.** No external paper-css dependency, no CDN stylesheets. The `.sheet` class carries explicit `width`/`height` for the Safari case where `@page size` alone fails silently ([MDN #28626](https://bugzilla.mozilla.org/show_bug.cgi?id=28626)).
-8. **Attribution comment at the top of `<head>`:** `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->` — non-negotiable; ensures attribution travels with every file.
+3. **Visually rich, not bland.** Use the full component library — callout boxes for tips, `.callout.warn` for gotchas, `.cmd-box` for terminal commands, `.code-block` for code, `.divider` between dense sections, `.card-grid` for comparisons. A worksheet with only plain text and write-lines is a failure of design. Every page should have at least 2-3 visual component types.
+4. **Accent-colored part numbers.** The `.part-number` badge uses `var(--accent)` as its background — this adds a pop of color that makes sections scannable. This is built into the base template; do not override it to black.
+5. **Survives grayscale.** Every design choice must read clearly in black-and-white. Color is a bonus, never a dependency. For diff hunks, use the `+`/`-` prefixes in `.code-add` / `.code-del` — they carry the meaning even when the tint drops out.
+6. **Scannable structure.** Numbered `.part` blocks, labeled sections, clear write-lines. A reader flipping through should instantly know where they are.
+7. **Accessibility defaults are always on.** Atkinson Hyperlegible / Lexend / Inter for body copy; 11pt minimum body (10.5pt allowed only for conference handouts); left-aligned (never justified — justification creates uneven spacing in print); Okabe-Ito palette for any color coding; WCAG AA contrast (body text on white ≥ 4.5:1).
+8. **Exact paper size via pure `@page` + `.sheet` fallback.** No external paper-css dependency, no CDN stylesheets. The `.sheet` class carries explicit `width`/`height` for the Safari case where `@page size` alone fails silently ([MDN #28626](https://bugzilla.mozilla.org/show_bug.cgi?id=28626)).
+9. **Content never overlaps the footer.** The `.content` div has `overflow: hidden` — this is a hard clip. If content is too tall, it gets cut off rather than bleeding into the footer. Respect the height budget to prevent this.
+10. **Plain white background.** The `.sheet` background is always `white`. Never add a colored, textured, or gradient page background — worksheets print on white paper.
+11. **Attribution comment at the top of `<head>`:** `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->` — non-negotiable; ensures attribution travels with every file.
 
 ## Process
 
@@ -223,24 +226,27 @@ Removing `overflow: hidden` brings back page-bleed in browser preview; dropping 
 
 **You MUST issue a Read tool call for `references/components.css` in this turn.** Do not inline component CSS from memory. Pick the components this worksheet actually needs and inline their CSS into the base template's `<style>` block. The core components and when to use each:
 
-1. `.write-area` / `.write-line` — ruled answer space, for any free-response question
-2. `.check-group` / `.check-item` / `.check-box` — checkbox lists (note: `.check-box` is the visible empty square; don't omit it)
-3. `.mc-group` / `.mc-item` / `.mc-bubble` — multiple choice with A/B/C/D bubbles
+1. `.write-area` / `.write-line` — ruled answer space for free-response questions
+2. `.check-group` / `.check-item` / `.check-box` — checkbox task lists, exit checklists, to-do items (`.check-box` is the visible square; don't omit it)
+3. `.mc-group` / `.mc-item` / `.mc-bubble` — multiple choice with A/B/C/D bubbles; also use T/F bubbles for true/false
 4. `.match-grid` — matching term → definition
 5. `.blank` — inline fill-in-the-blank underline (inside prose)
-6. `.callout` — tip or note box
-7. `.draw-box` — blank bordered area for sketches, diagrams, or stack traces
-8. `.part` / `.part-header` — numbered section label (already wired in the base template)
-9. `.code-block` / `.code-blank` / `.code-add` / `.code-del` — monospace code sample with optional fill-in-the-blank gaps and diff-hunk line prefixes
-10. `.predict-table` — two-column "Input → Output" table for predict-the-output drills (pairs naturally with `.code-block`)
-11. `.divider` / `.divider.strong` — horizontal rule between `.part` blocks for visual breathing room on dense pages
-12. `.cmd-box` — dark-background terminal command block (for CLI demos, install instructions, shell output)
-13. `.section-label` — small-caps colored category heading (for scorecard sections, rubric groups, themed categories)
-14. `.card-grid` / `.card` — multi-column option cards (`.cols-2` or `.cols-3` modifier; use for track selection, comparison layouts, reference grids)
+6. `.callout` — **tip, note, or positive highlight box** (green accent border, gray background, bold green lead-in). Use for hints, key insights, important context. Every page should have at least one callout to break up plain text.
+7. `.callout.warn` — **gotcha / warning / "don't do this" box** (red/vermillion border, warm background). Use for common mistakes, pitfalls, things to avoid. Adds visual urgency.
+8. `.draw-box` — blank bordered area for sketches, diagrams, or stack traces
+9. `.part` / `.part-header` — numbered section with accent-colored badge (already wired in base template)
+10. `.code-block` / `.code-blank` / `.code-add` / `.code-del` — monospace code with fill-in-the-blank gaps and diff-hunk prefixes
+11. `.predict-table` — two-column "Input → Output" table (pairs with `.code-block`)
+12. `.divider` / `.divider.strong` — horizontal rule between `.part` blocks on dense pages
+13. `.cmd-box` — **dark terminal box** for CLI commands, install instructions, shell output. Always use this instead of `.code-block` when showing terminal commands. The dark background with green `$` prompt looks professional.
+14. `.section-label` — small-caps accent-colored category heading (scorecard sections, rubric groups)
+15. `.card-grid` / `.card` — multi-column cards (`.cols-2` or `.cols-3`; for comparisons, track selection, reference grids)
+
+**Use the components generously.** A visually rich worksheet uses callouts for context, `.cmd-box` for terminal commands, `.code-block` for source code, `.divider` between dense sections, and `.check-group` for actionable checklists. A bland wall of text with only write-lines is a design failure. Aim for 2-3 distinct visual component types per page.
 
 Compose content into `.part` blocks. One `.part` per distinct activity. For multi-page worksheets, put orientation content (name/date, first activity) on page 1 and reference material on the last page. Use `<hr class="divider">` between `.part` blocks when a page has 3+ parts and needs visual separation.
 
-Don't invent a 15th component unless the existing fourteen genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
+Don't invent a 16th component unless the existing fifteen genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
 
 **Footer content.** The footer uses classed spans: `<span class="footer-left">` (monospace, course or worksheet title) and `<span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>` (italic credit line). If the user asks to remove the credit, comply without pushback.
 
@@ -299,26 +305,23 @@ start <path-to-file>     # Windows
 
 **MANDATORY handoff message.** After opening, you MUST always display the following. This is a hard rule — never skip it:
 
-1. **The full file path** — display the absolute path to the HTML file so the user can find it.
+1. **The file path** — use the relative path (just the filename) if the file is in the CWD, otherwise the absolute path. Output on its own line, never inside a `>` blockquote — long paths inside blockquotes wrap and break Cmd+click.
 2. **Print instructions** — how to export to PDF.
-3. **Open instructions** — how to Cmd+click / Ctrl+click the path to open it.
-4. **Ask for changes** — explicitly ask if the user wants any adjustments.
+3. **Ask for changes** — explicitly ask if the user wants any adjustments.
 
-Use this exact format (adapt the path and page details):
+Use this exact format (adapt the path and page details). **The file path MUST be on its own line, not inside a blockquote, so Cmd+click works in the terminal.**
 
-> **Worksheet saved and opened:**
->
-> `{absolute-path-to-file}`
->
-> **To open:** Cmd+click the path above (macOS terminal) · Ctrl+click (Linux/Windows terminal) · or copy-paste into a browser.
->
-> **To export PDF:** Cmd+P (macOS) or Ctrl+P (Windows/Linux) -> set **Margins: "Default"** (not "None") -> enable **"Background graphics"** -> Save as PDF. The 0.5in safe margin is baked into the CSS, so "Default" margins are required for correct sizing.
->
-> **Before you print, please check:**
-> 1. Does each page end with a complete activity — nothing cut off at the bottom?
-> 2. Does the page count match what you asked for ({N} page(s))?
->
-> **What would you like to change?** Let me know if anything needs adjusting — layout, spacing, content, font sizes, or additional pages.
+**Worksheet saved and opened:**
+
+{filename-or-relative-path}
+
+**To export PDF:** Cmd+P (macOS) or Ctrl+P (Windows/Linux) → Margins: **"Default"** (not "None") → enable **"Background graphics"** → Save as PDF.
+
+**Before you print, please check:**
+1. Does each page end with a complete activity — nothing cut off at the bottom?
+2. Does the page count match what you asked for ({N} page(s))?
+
+**What would you like to change?** Layout, spacing, content, font sizes, additional pages — just say the word.
 
 Do not declare the worksheet finished without displaying this message and asking for changes. The user's visual check catches what the self-check cannot (clipping, spacing feel, font rendering). If the user reports content clipped at the bottom, go back to Phase 4 and split or trim — do not remove `overflow: hidden`.
 
