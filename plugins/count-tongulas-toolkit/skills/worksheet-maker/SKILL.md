@@ -89,6 +89,8 @@ Produces a self-contained HTML worksheet that opens in any browser and prints to
 
 > These are **ceilings, not targets**. Leave ~15% vertical slack per page for the header, fields row, footer, and `.part-instruction` italics. A page that's exactly at ceiling will visually feel cramped even when it technically fits.
 
+> **Combined-load rule.** The ceilings above assume each component type appears in isolation. When a page mixes two or more heavy component types (code-block, predict-table, write-area with 5+ lines, zone-table), reduce each individual ceiling by 25% and re-check. Lightweight components (callout, tf-item, mc-item, match-item, vocab-item) do not trigger the reduction on their own.
+
 ## Requirements for Outputs
 
 Every generated worksheet must satisfy these. They are the difference between a sheet that gets used and a wall of text nobody fills out.
@@ -178,7 +180,7 @@ The user's next message contains the complete content brief. Treat it as final �
 2. **Split** — bump the page count by one and tell the user you did: *"This needed ~2 pages to breathe, so I made it a 2-page worksheet — page 1 is the predict/trace drill, page 2 is the reference card."*
 3. **Ask** — if the trim would lose something important and splitting wasn't offered, call `AskUserQuestion` once with "trim to fit one page / go to two pages" as the options.
 
-Never silently shrink the type below the audience minimum or remove write-line space to make content fit. The whole point of the budget is to protect the sheet from overstuffing — violating it is a worse outcome than a second page.
+Never silently shrink the type below the audience minimum or remove write-line space to make content fit. The whole point of the budget is to protect the sheet from overstuffing — violating it is a worse outcome than a second page. If the page mixes 2+ heavy component types, apply the combined-load reduction from the Quick Reference before assessing fit.
 
 **Otherwise, proceed to the checkpoint.** Do not loop back to `AskUserQuestion`.
 
@@ -227,17 +229,46 @@ Compose content into `.part` blocks. One `.part` per distinct activity. For mult
 
 Don't invent an 11th component unless the existing ten genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
 
+**Footer content.** The left `<span>` in `.page-footer` shows the course or worksheet title. The right `<span>` shows `Made with alextong.me/toolkit` at 7pt in `var(--ink-muted)` — this is the default credit line. If the user asks to remove it, comply without pushback.
+
+**Height budget tally (mandatory before saving).** After assembling all HTML, silently estimate the rendered height of each sheet against the 960px budget (10in at 96dpi). Use these constants:
+
+| Element | Height estimate |
+|---|---|
+| `.page-inner` padding (top + bottom) | 32px |
+| Page header (h1 + subtitle + border + margin) | 96px |
+| Fields row (name/date + margin) | 30px |
+| Page footer | 24px |
+| **Fixed chrome total** | **~182px** |
+| **Available for content** | **~778px** |
+
+Per-component estimates:
+- `.part-header` + `.part-instruction`: 56px per part
+- `.write-line`: `--write-line-height` value (default 24px)
+- `.fill-para` at `line-height: 2`: 33px per line (add 33px for each likely line wrap)
+- `.code-block` line: 20px
+- `.predict-table` / `.zone-table` row: 30px (plus 27px for thead)
+- `.tf-item` / `.mc-item` / `.match-item`: 32px each
+- `.callout`: 52px (single-line) to 80px (multi-line)
+- `.vocab-item`: 34px
+- `--part-gap` between parts: 14px (not after last part)
+
+This check is **silent** — do not display the tally to the user. Only surface it if a sheet exceeds the threshold: *"Sheet N estimated at ~Xpx — splitting [Part name] to a new page to avoid clipping."*
+
+If any sheet exceeds **880px** (~92% of 960px), treat it as a budget overflow: split content to the next page or trim. The 80px margin accounts for font rendering variance, text wrapping at 672px content width, and CSS rounding. Do not proceed to Phase 5 with a sheet over 880px.
+
 ### Phase 5 — Save, open, hand off to user
 
 Save the file in the user's current working directory with a descriptive name (`worksheet-git-rebase.html`, `onboarding-day1-handout.html`, `async-await-practice.html`).
 
 **Self-check before opening.** You cannot see a browser, so verify what you can from the HTML source:
 1. Count `<section class="sheet">` blocks — must match the planned page count.
-2. Count `.part` blocks per sheet — must not exceed the budget ceiling for this audience.
-3. No `.code-block` exceeds 30 lines on a single-page worksheet.
-4. Every sheet has a `<footer class="page-footer">`.
-5. The `<title>` matches the `<h1>` content.
-6. The attribution comment `<!-- Generated with worksheet-maker ... -->` is the first line inside `<head>`.
+2. **Full budget recount per sheet.** For each `<section class="sheet">`, count: (a) `.part` blocks, (b) `.write-line` elements, (c) lines inside each `.code-block`, (d) `<tr>` rows in each table (excluding `<thead>`), (e) `.callout` elements, (f) `.tf-item` / `.mc-item` / `.match-item` elements. Compare each count against the audience ceiling (apply the 25% combined-load reduction if 2+ heavy component types are present). If any count exceeds its ceiling, split or trim before opening.
+3. **Height tally check.** Verify the Phase 4 height tally for every sheet is under 880px. If you skipped the tally or it exceeds 880px, go back and fix.
+4. No `.code-block` exceeds 30 lines on a single-page worksheet.
+5. Every sheet has a `<footer class="page-footer">` with a right-side credit span.
+6. The `<title>` matches the `<h1>` content.
+7. The attribution comment `<!-- Generated with worksheet-maker ... -->` is the first line inside `<head>`.
 
 If any check fails, fix the HTML before opening.
 
@@ -438,7 +469,7 @@ asyncio.run(main())</code></pre>
 
       <footer class="page-footer">
         <span>Cohort 12 · Async Day</span>
-        <span>worksheet-maker</span>
+        <span style="font-size: 7pt; color: var(--ink-muted);">Made with alextong.me/toolkit</span>
       </footer>
 
     </div>
