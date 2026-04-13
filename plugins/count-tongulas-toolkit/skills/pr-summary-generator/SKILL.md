@@ -8,7 +8,7 @@ description: >
   "what changed in this branch", "draft a PR", or any variation of wanting a pull
   request description generated. Do NOT use for: writing commit messages, code review
   comments, release notes, changelog entries, or standup updates.
-user_invocable: true
+user_invocable: false  # Not ready yet — set to true when skill is complete
 author: Alex Tong — https://alextong.me
 ---
 
