@@ -20,11 +20,14 @@ description: >
   paper artifact.
 user_invocable: true
 author: Alex Tong — https://alextong.me
+allowed-tools: ["Bash(open:*)", "Bash(xdg-open:*)", "Bash(start:*)"]
 ---
 
 # worksheet-maker
 
 > From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
+
+**Phases 1 through 5 are sequential. Do not begin HTML generation before completing the content dump and budget check. Do not write HTML from memory — always Read the reference files first. Every `AskUserQuestion` call specified in the process must be shown to the user; do not skip or combine phases.**
 
 ## Overview
 
@@ -133,7 +136,14 @@ Use these exact enumerated option sets. Each option must be clickable, so the wo
 
 **If every bounded field is already supplied by the initial prompt, skip `AskUserQuestion` entirely** and go straight to Step 1b. The mandatory-tool-call rule applies only when at least one field is missing; it is not a ceremony for its own sake.
 
-**Step 1b — Content dump.** End Phase 1 by printing the message below as plain text. **Do not call `AskUserQuestion` or any other tool after printing this message.** Ending the turn with only text output makes Claude Code wait for the user's next message, which can be any length or format — exactly what a content brief needs.
+**Audience recovery.** Do NOT proceed to Step 1b until audience is resolved — wrong audience forces a full typography rewrite.
+- **Too vague** (e.g., "adults", "students", "people") — ask one follow-up: *"What's the context — bootcamp, university lecture, corporate workshop, or something else?"*
+- **Refuses to specify** — default to "Mid-senior IC / workshop" and state the assumption: *"I'll use mid-senior engineer defaults (Inter body, 11pt, 22px write lines). Easy to change later."*
+- **Outside the table** (e.g., "homeschool parents", "nursing students") — map to the nearest row by age/context. "Homeschool parents teaching grade 3" maps to Grades 3-5. "Nursing students" maps to University.
+
+**Step 1b — Content dump.** If the initial prompt already contains substantive content (code snippets, topic lists with 3+ items, activity shape hints like "predict/trace/fix", or a pasted outline/spec), skip this step entirely — treat the initial prompt as the content dump and proceed directly to Phase 2. The content dump prompt exists to collect information the user hasn't already given; it is not a ceremony.
+
+**Otherwise,** end Phase 1 by printing the message below as plain text. **Do not call `AskUserQuestion` or any other tool after printing this message.** Ending the turn with only text output makes Claude Code wait for the user's next message, which can be any length or format — exactly what a content brief needs.
 
 Print this verbatim (adapt only the example bullets if the audience makes a different set of examples more natural):
 
@@ -162,7 +172,7 @@ The user's next message contains the complete content brief. Treat it as final �
 
 **If the user delegates a sub-choice to you** (e.g., *"pick a similar snippet"*, *"choose whatever trace example makes sense"*), make the choice yourself and move on. Do not re-prompt — delegation is an explicit "you decide" signal.
 
-**Budget check.** Before moving to Phase 3, roughly sum the dumped content against the page count and the content budget table in Quick Reference. If the user asked for 1 page but the dump implies 5 parts plus 40 write lines plus a 40-line code block, you have three choices — pick one and commit:
+**Budget check.** Before moving to Phase 3, count the planned content against the budget ceiling for this audience from the Quick Reference table. Produce an explicit tally: *"Budget: X parts, ~Y write-lines, ~Z code-block lines, W predict-table rows vs. ceiling of [audience row]. Assessment: fits with ~N% slack / exceeds by ~N%."* If the dump exceeds the budget, you have three choices — pick one and commit:
 
 1. **Trim** — drop the weakest activity (the one furthest from the stated learning goal).
 2. **Split** — bump the page count by one and tell the user you did: *"This needed ~2 pages to breathe, so I made it a 2-page worksheet — page 1 is the predict/trace drill, page 2 is the reference card."*
@@ -170,21 +180,37 @@ The user's next message contains the complete content brief. Treat it as final �
 
 Never silently shrink the type below the audience minimum or remove write-line space to make content fit. The whole point of the budget is to protect the sheet from overstuffing — violating it is a worse outcome than a second page.
 
-**Otherwise, proceed to Phase 3 with the parsed content.** Do not loop back to `AskUserQuestion`.
+**Otherwise, proceed to the checkpoint.** Do not loop back to `AskUserQuestion`.
+
+### Checkpoint
+
+Before generating HTML, display the parsed plan as a brief transition message:
+- **Audience**: {audience} -> {typography row selected from Quick Reference}
+- **Accent**: {subject preset} -> {hex}
+- **Pages**: {count}
+- **Paper**: {Letter or A4}
+- **Components needed**: {list, e.g., .code-block, .predict-table, .write-area}
+- **Budget assessment**: {the tally from the budget check, e.g., "2 parts + 12 write-lines + 1 code block = ~65% of a 1-page bootcamp budget, fits with room"}
+
+This is display-only — do not call `AskUserQuestion` or wait for confirmation. The user can interject if something is wrong; otherwise proceed to Phase 3.
 
 ### Phase 3 — Copy the base template
 
-Read `references/base-template.html` and copy it as the literal starting point — do not write the scaffold from scratch. It encodes the print contract, which is the hardest part to get right.
+**You MUST issue a Read tool call for `references/base-template.html` in this turn.** Do not write HTML from memory or training data — the base template is updated independently of this skill and your training data may be stale. Copy it as the literal starting point. It encodes the print contract, which is the hardest part to get right.
 
 Apply the audience typography by setting the `:root` CSS variables at the top of the `<style>` block and updating the Google Fonts `<link>` tag. **Both the variables and the link must match** — swapping one without the other silently falls back to Atkinson.
 
 Apply the subject preset by setting `--accent` and `--accent-light` from the Quick Reference table.
 
+**Attribution comment.** The first line inside `<head>` must be `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->`. This is non-negotiable — add it now, not as an afterthought.
+
 **Do not touch the print contract** unless switching paper size. The `@page { size: 8.5in 11in; margin: 0.5in }`, the `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, the `break-inside: avoid` rules, and the `@media print` block all work together. Removing `overflow: hidden` brings back page-bleed in browser preview; dropping the `@page` margin to zero forces the user to select "None" in the print dialog or lose content at the edges; setting `.sheet` width to `100%` in `@media print` breaks Safari. If you need to change paper size to A4, swap both `@page { size: 210mm 297mm }` and `.sheet { width: 180mm; height: 267mm }` as a pair — never one without the other.
+
+**Font verify.** Before proceeding to Phase 4, check: every font family referenced in `:root` CSS variables (`--body-font`, `--heading-font`, and any code font) must appear in the Google Fonts `<link>` URL. If a variable names a font not in the link, fix the link now. Swapping one without the other silently falls back to Atkinson.
 
 ### Phase 4 — Assemble content
 
-Read `references/components.css`. Pick the components this worksheet actually needs and inline their CSS into the base template's `<style>` block. The core components and when to use each:
+**You MUST issue a Read tool call for `references/components.css` in this turn.** Do not inline component CSS from memory. Pick the components this worksheet actually needs and inline their CSS into the base template's `<style>` block. The core components and when to use each:
 
 1. `.write-area` / `.write-line` — ruled answer space, for any free-response question
 2. `.check-group` / `.check-item` / `.check-box` — checkbox lists (note: `.check-box` is the visible empty square; don't omit it)
@@ -201,9 +227,21 @@ Compose content into `.part` blocks. One `.part` per distinct activity. For mult
 
 Don't invent an 11th component unless the existing ten genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
 
-### Phase 5 — Open, print-check, iterate
+### Phase 5 — Save, open, hand off to user
 
-Save the file in the user's current working directory with a descriptive name (`worksheet-git-rebase.html`, `onboarding-day1-handout.html`, `async-await-practice.html`). Then open it:
+Save the file in the user's current working directory with a descriptive name (`worksheet-git-rebase.html`, `onboarding-day1-handout.html`, `async-await-practice.html`).
+
+**Self-check before opening.** You cannot see a browser, so verify what you can from the HTML source:
+1. Count `<section class="sheet">` blocks — must match the planned page count.
+2. Count `.part` blocks per sheet — must not exceed the budget ceiling for this audience.
+3. No `.code-block` exceeds 30 lines on a single-page worksheet.
+4. Every sheet has a `<footer class="page-footer">`.
+5. The `<title>` matches the `<h1>` content.
+6. The attribution comment `<!-- Generated with worksheet-maker ... -->` is the first line inside `<head>`.
+
+If any check fails, fix the HTML before opening.
+
+**Open the file via Bash.** Execute the command directly — do not print it for the user to run manually:
 
 ```bash
 open <path-to-file>      # macOS
@@ -211,29 +249,40 @@ xdg-open <path-to-file>  # Linux
 start <path-to-file>     # Windows
 ```
 
-**Verify the page count visually before handing the file back.** Because browser preview now uses `overflow: hidden` on `.sheet`, content that would otherwise bleed onto page 2 will get *clipped* instead — you'll see a truncated last activity at the bottom of the page instead of content flowing. Open the file, scroll through every `.sheet`, and confirm:
+**MANDATORY handoff message.** After opening, you MUST always display the following. This is a hard rule — never skip it:
 
-1. Each sheet ends with a complete part (no orphaned part-header, no half-rendered code block, no truncated table).
-2. The user's promised page count matches the number of visible `<section class="sheet">` blocks.
-3. Nothing looks clipped at the bottom edge. If anything looks cut off, go back to Phase 4 and trim or split — do not ship clipped content.
+1. **The full file path** — display the absolute path to the HTML file so the user can find it.
+2. **Print instructions** — how to export to PDF.
+3. **Open instructions** — how to Cmd+click / Ctrl+click the path to open it.
+4. **Ask for changes** — explicitly ask if the user wants any adjustments.
 
-If the content is clipped, that's the content-budget telling you the brief was too dense for the stated page count. Go back to Phase 2's budget check and apply the split/trim decision you should have made earlier.
+Use this exact format (adapt the path and page details):
 
-Tell the user the exact print dialog settings for the cleanest PDF:
+> **Worksheet saved and opened:**
+>
+> `{absolute-path-to-file}`
+>
+> **To open:** Cmd+click the path above (macOS terminal) · Ctrl+click (Linux/Windows terminal) · or copy-paste into a browser.
+>
+> **To export PDF:** Cmd+P (macOS) or Ctrl+P (Windows/Linux) -> enable **"Background graphics"** -> Save as PDF. The 0.5in safe margin is baked into the CSS, so any margin preset works — "Default" is fine.
+>
+> **Before you print, please check:**
+> 1. Does each page end with a complete activity — nothing cut off at the bottom?
+> 2. Does the page count match what you asked for ({N} page(s))?
+>
+> **What would you like to change?** Let me know if anything needs adjusting — layout, spacing, content, font sizes, or additional pages.
 
-> *"Opened in your browser. To export: Cmd+P → **enable 'Background graphics'** → Save as PDF. The worksheet uses a 0.5in safe margin baked into the CSS, so any margin preset will work — 'Default' is fine. Let me know what to adjust."*
+Do not declare the worksheet finished without displaying this message and asking for changes. The user's visual check catches what the self-check cannot (clipping, spacing feel, font rendering). If the user reports content clipped at the bottom, go back to Phase 4 and split or trim — do not remove `overflow: hidden`.
 
-The `@page` margin handles print-dialog robustness — users no longer need to hunt for the "None" margin setting or worry about the headers/footers strip eating content. Background graphics is still required for accent fills and callout tints.
+**Common iterations:**
 
-Common iterations:
-
-- "More space for writing" → increase `--write-line-height`
-- "Too dense" → reduce parts per page or widen `--part-gap`
-- "Add an answer key" → append a new `<section class="sheet">` with the answers
-- "A4 instead of Letter" → swap `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }`
-- "Make it more fun for younger kids" → swap heading font to Fredoka, widen write lines
-- "Make the code bigger" → bump `.code-block` `font-size` to 11pt and reduce parts per page
-- "Content is getting cut off at the bottom" → overstuffed; split to an extra page, don't shrink type
+- "More space for writing" -> increase `--write-line-height`
+- "Too dense" -> reduce parts per page or widen `--part-gap`
+- "Add an answer key" -> append a new `<section class="sheet">` with the answers
+- "A4 instead of Letter" -> swap `@page { size: 210mm 297mm }` **and** `.sheet { width: 180mm; height: 267mm }`
+- "Make it more fun for younger kids" -> swap heading font to Fredoka, widen write lines
+- "Make the code bigger" -> bump `.code-block` `font-size` to 11pt and reduce parts per page
+- "Content is getting cut off at the bottom" -> overstuffed; split to an extra page, don't shrink type
 
 ## Example
 
@@ -402,19 +451,31 @@ asyncio.run(main())</code></pre>
 
 The same shape generalizes to any tech topic: swap the code, swap the part titles, swap the hint. "Teaching SQL joins" → `.code-block` with a query + `.predict-table` with sample rows → row output. "Teaching regex" → `.code-block` with the pattern + `.mc-group` for matches. "Teaching git rebase" → two `.code-block` elements with `.code-add` / `.code-del` lines showing before/after.
 
-## Edge cases & recovery
+## Error handling & recovery
 
-- **Audience unclear** → ask via `AskUserQuestion` before writing any HTML. Wrong audience forces a full typography rewrite.
-- **User asks for a non-printable artifact** (Slides, Docs, interactive quiz, LMS, Notion template) → decline explicitly and offer the HTML → PDF alternative. This skill only produces printable paper artifacts.
-- **User asks for a subject outside the presets** (history, music theory, phlebotomy, literature analysis) → use the green default. Never improvise a hex; the Okabe-Ito palette is the only CVD-safe option.
-- **Non-English / RTL / CJK content** → out of scope. Atkinson and Lexend have limited non-Latin glyph coverage; RTL needs a full layout mirror. Tell the user and stop.
-- **Printed output has an extra blank page** → `.sheet` total height plus its top/bottom margin exceeds `10in` (the printable area inside the 0.5in `@page` margin). Reduce `.page-inner` padding or split content across two sheets — don't shrink `.sheet` below 10in tall, the whole print contract depends on that number.
-- **Content is visually clipped at the bottom of a page in browser preview** → expected behavior with the new `overflow: hidden` on `.sheet`. It means the content budget for that page is exceeded. Split to an additional `<section class="sheet">` or trim the weakest activity; do not remove `overflow: hidden` to "fix" it — that brings back page-bleed.
-- **Fonts aren't loading in print preview** → the user is offline or on `file://`. Fall back to `system-ui, -apple-system, sans-serif` for body and `Georgia, serif` for headings; warn the user that code samples will render in the system monospace.
-- **Color prints differently than the screen preview** → remind the user to enable "Background graphics" in the print dialog. If still wrong, confirm the accent works in grayscale — that's the portability test.
-- **User wants syntax highlighting on code** → pre-bake it as inline `<span class="comment">` tags inside `.code-block`. Never add runtime JS, and never rely on color alone to carry syntactic meaning (italic + color is the minimum).
-- **User wants an answer key** → append a second `<section class="sheet">` with a distinct `.subtitle` like "Answer Key". Generate it only when the user explicitly asks; don't assume.
-- **Paper-css looks tempting as a fix** → it isn't. Never add a CDN stylesheet, even when Safari print preview looks broken. Debug the `.sheet` width/height first.
+| Phase | Error | Action |
+|-------|-------|--------|
+| 1a | Audience missing and not inferable from prompt | Ask via `AskUserQuestion`. Do NOT proceed — wrong audience forces a full typography rewrite. |
+| 1a | Audience too vague ("adults", "students") | Ask one follow-up for context (bootcamp, university, corporate, etc.) |
+| 1a | Audience outside the typography table | Map to nearest row by age/context. State the mapping explicitly. |
+| 1b | User sends content in the initial prompt before being prompted | Treat it as the content dump; skip 1b. Do not discard user content. |
+| 2 | Content dump too dense for stated page count | Apply budget check: trim, split, or ask. Never shrink type below audience minimum. |
+| 2 | Content dump has no actionable content ("make something about SQL") | Treat as delegation. Pick a focused subtopic and make creative decisions yourself. Do not loop asking for more detail. |
+| 2 | Non-English / RTL / CJK content | Stop. Atkinson/Lexend have limited non-Latin glyph coverage; RTL needs a full layout mirror. Tell the user. |
+| 3 | Reference files not found at expected path | Stop. "Reference files missing. Reinstall the skill or check that `references/` is alongside the skill file." |
+| 3 | Google Fonts link does not match CSS variables | Fix the link before proceeding. Mismatched fonts silently fall back to Atkinson. |
+| 4 | Content requires a component not in the 10 available | Compose from existing components. Do not invent an 11th unless genuinely impossible. |
+| 4 | Code snippet exceeds 30 lines on a single page | Truncate with `...` and a callout ("full code on reverse"), or split to a second page. Never shrink code font below 9pt. |
+| 5 | `open` command fails (headless, SSH, WSL) | Print the absolute file path and tell the user to open it manually. Do not retry. |
+| 5 | Content clipped at bottom of `.sheet` in browser | Go back to Phase 4 and split or trim. Do NOT remove `overflow: hidden` — that brings back page-bleed. |
+| 5 | Printed output has extra blank page | `.sheet` height + margin exceeds printable area. Reduce `.page-inner` padding or split. Don't shrink `.sheet` below 10in. |
+| 5 | Fonts not loading in print preview (offline / `file://`) | Fall back to `system-ui, sans-serif` body / `Georgia, serif` headings. Warn the user. |
+| 5 | Color prints differently than screen | Remind user to enable "Background graphics." Confirm accent works in grayscale. |
+| Any | User asks for a non-printable artifact (Slides, Docs, quiz, LMS) | Decline. This skill only produces printable paper artifacts. Offer HTML -> PDF alternative. |
+| Any | Subject outside presets (history, music, etc.) | Use the green default (`#009E73`). Never improvise a hex — Okabe-Ito is the only CVD-safe option. |
+| Any | User wants syntax highlighting | Pre-bake as inline `<span class="comment">` tags. Never add runtime JS. Use italic + color, never color alone. |
+| Any | User wants an answer key | Append a `<section class="sheet">` with distinct `.subtitle` "Answer Key". Only when explicitly asked. |
+| Any | paper-css seems like a fix | It isn't. Never add a CDN stylesheet. Debug `.sheet` width/height instead. |
 
 ## Reference files
 
