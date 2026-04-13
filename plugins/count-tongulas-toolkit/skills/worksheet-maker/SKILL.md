@@ -31,7 +31,9 @@ allowed-tools: ["Bash(open:*)", "Bash(xdg-open:*)", "Bash(start:*)"]
 
 ## Overview
 
-Produces a self-contained HTML worksheet that opens in any browser and prints to clean PDF via Cmd+P / Ctrl+P. Mental model: the sheet is the artifact. No servers, no runtime, no external scripts — every design choice must survive a black-and-white print on standard Letter or A4 paper.
+Produces a self-contained HTML worksheet that opens in any browser and prints to clean PDF via Cmd+P / Ctrl+P. Mental model: the sheet is the artifact. No servers, no runtime, no external scripts — every design choice must survive a black-and-white print on paper.
+
+**Paper size defaults to US Letter (8.5 × 11in).** Do not change the paper size unless the user explicitly requests A4 or another size. The base template's `@page { size: 8.5in 11in; margin: 0.5in }` and `.sheet { width: 7.5in; height: 10in }` are calibrated for Letter. When the user opens the HTML in Chrome or Safari and hits Cmd+P with **"Margins: Default"**, the PDF must fill the page perfectly — no scaling, no offset, no extra whitespace.
 
 **Before writing any HTML, read both reference files.** They are not optional — the base template encodes a non-obvious print contract (Safari `.sheet` fallback, element-level `print-color-adjust`, WCAG-compliant ink palette) that is easy to regress if you rewrite the scaffold from scratch.
 
@@ -55,14 +57,14 @@ Produces a self-contained HTML worksheet that opens in any browser and prints to
 
 > For corporate or professional learners, default to one of the bold rows regardless of age. "Audience" means *context and role*, not just grade band.
 
-**Subject → accent color.** Always pick one from the Okabe-Ito CVD-safe palette — never invent a hex. Any subject not listed uses the green default.
+**Subject → accent color.** Always pick one from the Okabe-Ito CVD-safe palette — never invent a hex. Any subject not listed uses the green default. Set **both** `--accent` (for borders/fills) and `--accent-text` (darkened, WCAG AA 4.5:1 on white, for text).
 
-| Subject preset | Accent | Hex | Light tint |
-|---|---|---|---|
-| Math / science | Blue | `#0072B2` | `#e6f2f9` |
-| Language arts / ELA | Orange | `#E69F00` | `#fdf3e0` |
-| **Code / systems / engineering** | **Vermillion** | **`#D55E00`** | **`#fbe9df`** |
-| Anything else | Green | `#009E73` | `#e8f5ee` |
+| Subject preset | Accent | `--accent` | `--accent-text` | Light tint |
+|---|---|---|---|---|
+| Math / science | Blue | `#0072B2` | `#0072B2` | `#e6f2f9` |
+| Language arts / ELA | Orange | `#E69F00` | `#946500` | `#fdf3e0` |
+| **Code / systems / engineering** | **Vermillion** | **`#D55E00`** | **`#A34500`** | **`#fbe9df`** |
+| Anything else | Green | `#009E73` | `#006B4F` | `#e8f5ee` |
 
 **Task → approach.**
 
@@ -202,11 +204,18 @@ This is display-only — do not call `AskUserQuestion` or wait for confirmation.
 
 Apply the audience typography by setting the `:root` CSS variables at the top of the `<style>` block and updating the Google Fonts `<link>` tag. **Both the variables and the link must match** — swapping one without the other silently falls back to Atkinson.
 
-Apply the subject preset by setting `--accent` and `--accent-light` from the Quick Reference table.
+Apply the subject preset by setting `--accent`, `--accent-text`, and `--accent-light` from the Quick Reference table. The `--accent-text` variable is a darkened variant that passes WCAG AA 4.5:1 on white — it is used automatically by `.callout strong`, `.section-label`, and `.card-label` via `var(--accent-text, var(--accent))`.
 
 **Attribution comment.** The first line inside `<head>` must be `<!-- Generated with worksheet-maker by Alex Tong — https://alextong.me -->`. This is non-negotiable — add it now, not as an afterthought.
 
-**Do not touch the print contract** unless switching paper size. The `@page { size: 8.5in 11in; margin: 0.5in }`, the `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, the `break-inside: avoid` rules, and the `@media print` block all work together. Removing `overflow: hidden` brings back page-bleed in browser preview; dropping the `@page` margin to zero forces the user to select "None" in the print dialog or lose content at the edges; setting `.sheet` width to `100%` in `@media print` breaks Safari. If you need to change paper size to A4, swap both `@page { size: 210mm 297mm }` and `.sheet { width: 180mm; height: 267mm }` as a pair — never one without the other.
+**Do not touch the print contract.** The CSS rules below work together to produce a perfect Letter-size PDF when the user prints with "Margins: Default":
+
+- `@page { size: 8.5in 11in; margin: 0.5in }` — defines the page box and safe zone
+- `.sheet { width: 7.5in; height: 10in; overflow: hidden }` — fits exactly inside the 0.5in margins; explicit dims are the Safari fallback since Safari ignores `@page size`
+- `break-inside: avoid` on block components — prevents mid-element page breaks
+- `@media print { body { print-color-adjust: exact } }` — preserves backgrounds/borders
+
+Removing `overflow: hidden` brings back page-bleed in browser preview; dropping the `@page` margin to zero forces the user to select "None" in the print dialog or lose content at the edges; setting `.sheet` width to `100%` in `@media print` breaks Safari. **Never change `@page size` or `.sheet` dimensions unless the user explicitly requests A4** — in that case swap both `@page { size: 210mm 297mm }` and `.sheet { width: 180mm; height: 267mm }` as a pair.
 
 **Font verify.** Before proceeding to Phase 4, check: every font family referenced in `:root` CSS variables (`--body-font`, `--heading-font`, and any code font) must appear in the Google Fonts `<link>` URL. If a variable names a font not in the link, fix the link now. Swapping one without the other silently falls back to Atkinson.
 
@@ -224,33 +233,41 @@ Apply the subject preset by setting `--accent` and `--accent-light` from the Qui
 8. `.part` / `.part-header` — numbered section label (already wired in the base template)
 9. `.code-block` / `.code-blank` / `.code-add` / `.code-del` — monospace code sample with optional fill-in-the-blank gaps and diff-hunk line prefixes
 10. `.predict-table` — two-column "Input → Output" table for predict-the-output drills (pairs naturally with `.code-block`)
+11. `.divider` / `.divider.strong` — horizontal rule between `.part` blocks for visual breathing room on dense pages
+12. `.cmd-box` — dark-background terminal command block (for CLI demos, install instructions, shell output)
+13. `.section-label` — small-caps colored category heading (for scorecard sections, rubric groups, themed categories)
+14. `.card-grid` / `.card` — multi-column option cards (`.cols-2` or `.cols-3` modifier; use for track selection, comparison layouts, reference grids)
 
-Compose content into `.part` blocks. One `.part` per distinct activity. For multi-page worksheets, put orientation content (name/date, first activity) on page 1 and reference material on the last page.
+Compose content into `.part` blocks. One `.part` per distinct activity. For multi-page worksheets, put orientation content (name/date, first activity) on page 1 and reference material on the last page. Use `<hr class="divider">` between `.part` blocks when a page has 3+ parts and needs visual separation.
 
-Don't invent an 11th component unless the existing ten genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
+Don't invent a 15th component unless the existing fourteen genuinely cannot compose what the user needs. The smaller the library, the more consistent every output.
 
-**Footer content.** The left `<span>` in `.page-footer` shows the course or worksheet title. The right `<span>` shows `Made with alextong.me/toolkit` at 7pt in `var(--ink-muted)` — this is the default credit line. If the user asks to remove it, comply without pushback.
+**Footer content.** The footer uses classed spans: `<span class="footer-left">` (monospace, course or worksheet title) and `<span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>` (italic credit line). If the user asks to remove the credit, comply without pushback.
 
 **Height budget tally (mandatory before saving).** After assembling all HTML, silently estimate the rendered height of each sheet against the 960px budget (10in at 96dpi). Use these constants:
 
 | Element | Height estimate |
 |---|---|
-| `.page-inner` padding (top + bottom) | 32px |
-| Page header (h1 + subtitle + border + margin) | 96px |
+| `.page-inner` padding (top + bottom) | 52px |
+| Page header (h1 + subtitle + border + margin) | 100px |
 | Fields row (name/date + margin) | 30px |
 | Page footer | 24px |
-| **Fixed chrome total** | **~182px** |
-| **Available for content** | **~778px** |
+| **Fixed chrome total** | **~206px** |
+| **Available for content** | **~754px** |
 
 Per-component estimates:
 - `.part-header` + `.part-instruction`: 56px per part
 - `.write-line`: `--write-line-height` value (default 24px)
 - `.fill-para` at `line-height: 2`: 33px per line (add 33px for each likely line wrap)
-- `.code-block` line: 20px
+- `.code-block` line: 19px
 - `.predict-table` / `.zone-table` row: 30px (plus 27px for thead)
 - `.tf-item` / `.mc-item` / `.match-item`: 32px each
-- `.callout`: 52px (single-line) to 80px (multi-line)
+- `.callout`: 44px (single-line) to 72px (multi-line)
 - `.vocab-item`: 34px
+- `.divider`: 13px
+- `.cmd-box`: 44px (single-line) to 84px (multi-line)
+- `.section-label`: 28px
+- `.card-grid` row: ~60px per row of cards
 - `--part-gap` between parts: 14px (not after last part)
 
 This check is **silent** — do not display the tally to the user. Only surface it if a sheet exceeds the threshold: *"Sheet N estimated at ~Xpx — splitting [Part name] to a new page to avoid clipping."*
@@ -295,7 +312,7 @@ Use this exact format (adapt the path and page details):
 >
 > **To open:** Cmd+click the path above (macOS terminal) · Ctrl+click (Linux/Windows terminal) · or copy-paste into a browser.
 >
-> **To export PDF:** Cmd+P (macOS) or Ctrl+P (Windows/Linux) -> enable **"Background graphics"** -> Save as PDF. The 0.5in safe margin is baked into the CSS, so any margin preset works — "Default" is fine.
+> **To export PDF:** Cmd+P (macOS) or Ctrl+P (Windows/Linux) -> set **Margins: "Default"** (not "None") -> enable **"Background graphics"** -> Save as PDF. The 0.5in safe margin is baked into the CSS, so "Default" margins are required for correct sizing.
 >
 > **Before you print, please check:**
 > 1. Does each page end with a complete activity — nothing cut off at the bottom?
@@ -343,6 +360,7 @@ Do not declare the worksheet finished without displaying this message and asking
 
 ```css
 --accent: #D55E00;         /* Code/systems preset */
+--accent-text: #A34500;    /* AA-safe text variant */
 --accent-light: #fbe9df;
 --body-font: 'Atkinson Hyperlegible', system-ui, sans-serif;
 --heading-font: 'Instrument Serif', Georgia, serif;
@@ -350,7 +368,7 @@ Do not declare the worksheet finished without displaying this message and asking
 --write-line-height: 26px;
 ```
 
-Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrains Mono. Leave the entire print contract (`@page { size: 8.5in 11in; margin: 0.5in }`, `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, `break-inside: avoid` rules, `@media print` block) untouched.
+Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrains Mono (all three must be in the link). Leave the entire print contract (`@page { size: 8.5in 11in; margin: 0.5in }`, `.sheet { width: 7.5in; height: 10in; overflow: hidden }`, `break-inside: avoid` rules, `@media print` block) untouched.
 
 **Phase 4 — assemble.** Inline `.code-block`, `.predict-table`, `.write-area`, and `.callout` from `components.css`. Skip the others.
 
@@ -368,7 +386,7 @@ Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrain
     :root {
       --ink: #1a1a1a; --ink-light: #555; --ink-muted: #595959;
       --rule: #d0d0d0; --rule-light: #e8e8e8;
-      --accent: #D55E00; --accent-light: #fbe9df; --bg-callout: #f5f5f0;
+      --accent: #D55E00; --accent-text: #A34500; --accent-light: #fbe9df; --bg-callout: #f5f5f0;
       --body-font: 'Atkinson Hyperlegible', system-ui, sans-serif;
       --heading-font: 'Instrument Serif', Georgia, serif;
       --body-size: 11pt; --h1-size: 26pt;
@@ -378,7 +396,7 @@ Swap the Google Fonts `<link>` to include Atkinson + Instrument Serif + JetBrain
     html, body { margin: 0; padding: 0; }
     body {
       background: #e0e0e0; font-family: var(--body-font); font-size: var(--body-size);
-      color: var(--ink); line-height: 1.5; text-align: left;
+      color: var(--ink); line-height: 1.45; text-align: left;
       -webkit-font-smoothing: antialiased;
     }
     .sheet {
@@ -468,8 +486,8 @@ asyncio.run(main())</code></pre>
       </div>
 
       <footer class="page-footer">
-        <span>Cohort 12 · Async Day</span>
-        <span style="font-size: 7pt; color: var(--ink-muted);">Made with alextong.me/toolkit</span>
+        <span class="footer-left">Cohort 12 · Async Day</span>
+        <span class="footer-right" style="font-size: 7pt;">Made with alextong.me/toolkit</span>
       </footer>
 
     </div>
