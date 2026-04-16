@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-// Smoke test: the pr-summary-generator skill's worked example must
+// Smoke test: the pr-summary skill's worked example must
 // contain every section the skill promises to emit, in the right shape.
 
 const fs = require("fs");
-const SKILL =
-  "plugins/pr-summary-generator/skills/pr-summary-generator/SKILL.md";
+const SKILL = "plugins/pr/skills/summary/SKILL.md";
 
 const content = fs.readFileSync(SKILL, "utf8");
 
@@ -42,4 +41,4 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log("OK: pr-summary-generator example contains all required markers");
+console.log("OK: pr-summary example contains all required markers");

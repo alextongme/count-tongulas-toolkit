@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Free Claude Code plugins from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
-    "version": "0.9.0"
+    "version": "0.10.0"
   },
   "plugins": [
     {
       "name": "count-tongulas-workspace",
       "source": "./plugins/workspace",
       "description": "Create multi-repo workspaces with shared context — for teams or personal projects. Generates repo registry, CLAUDE.md scaffold, Makefile, and bootstrap scripts.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Alex Tong",
         "url": "https://alextong.me"

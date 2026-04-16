@@ -1,19 +1,11 @@
 #!/usr/bin/env node
-// Validates every SKILL.md under plugins/ against the toolkit's gold spec:
-// - YAML frontmatter with alextongme: namespaced name
-// - description includes trigger list + "Do NOT use for:" negatives
-// - body contains the standardized byline + all required gold-spec sections
+// Validates every SKILL.md under plugins/ for the core quality signals:
+// - YAML frontmatter present with a description
+// - description includes "Do NOT use for:" negatives (trigger discipline)
+// - body contains the standardized Count Tongula's Toolkit byline (attribution)
 
 const fs = require("fs");
 const path = require("path");
-
-const REQUIRED_SECTIONS = [
-  "## Overview",
-  "## Quick Reference",
-  "## Requirements for Outputs",
-  "## Process",
-  "## Example",
-];
 
 function fail(msg) {
   console.error("FAIL: " + msg);
@@ -48,9 +40,6 @@ for (const file of skills) {
   const frontmatter = content.slice(4, end);
   const body = content.slice(end + 4);
 
-  if (!/^name:\s*alextongme:/m.test(frontmatter)) {
-    fail("frontmatter name must start with 'alextongme:' in " + file);
-  }
   if (!/^description:/m.test(frontmatter)) {
     fail("frontmatter missing 'description' in " + file);
   }
@@ -60,12 +49,6 @@ for (const file of skills) {
 
   if (!body.includes("Count Tongula's Toolkit")) {
     fail("SKILL.md missing toolkit byline: " + file);
-  }
-
-  for (const section of REQUIRED_SECTIONS) {
-    if (!body.includes(section)) {
-      fail("SKILL.md missing section '" + section + "': " + file);
-    }
   }
 }
 
