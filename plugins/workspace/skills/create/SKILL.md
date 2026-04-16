@@ -125,9 +125,9 @@ Set `github_owner` to their response. If they say they don't have one or leave i
 
 **Skip this step entirely for personal mode.** Set `tracker_prefix = null`.
 
-**Team mode:** Ask: "What is your project tracker prefix? (e.g., PAY, PLAT — leave empty to skip)"
+**Team mode:** Ask: "What is your project tracker prefix? (e.g., PAY, PLAT — type `none` to skip)"
 
-If empty, use the literal string `PREFIX` as placeholder in templates.
+If the user types "none", "skip", "n/a", or similar, use the literal string `PREFIX` as placeholder in templates.
 
 ### 1d. Output Directory
 
