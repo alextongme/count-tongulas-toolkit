@@ -245,17 +245,27 @@ Proceed to file generation.
 
 ### repos.json
 
-Build a JSON object. Keys are group names (sorted alphabetically). Values are arrays of repo objects:
+Build a JSON object. Include a top-level `_meta` key with generator info, then group keys (sorted alphabetically) with arrays of repo objects:
 
 ```json
 {
-  "name": "payments-api",
-  "repo": "org/payments-api",
-  "description": "Payment processing API",
-  "language": "Go",
-  "defaultBranch": "main"
+  "_meta": {
+    "generator": "count-tongulas-workspace",
+    "homepage": "https://alextong.me/toolkit/workspace"
+  },
+  "go": [
+    {
+      "name": "payments-api",
+      "repo": "org/payments-api",
+      "description": "Payment processing API",
+      "language": "Go",
+      "defaultBranch": "main"
+    }
+  ]
 }
 ```
+
+The `_meta` key is always first. Tools that iterate groups should skip it.
 
 Use **Write** to create `{output_dir}/repos.json` with 2-space indentation.
 

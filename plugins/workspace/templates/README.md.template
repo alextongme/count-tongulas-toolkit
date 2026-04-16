@@ -74,3 +74,7 @@ claude plugin install context7@claude-plugins-official
 ## Personal overrides
 
 Create `CLAUDE.local.md` (gitignored) for personal preferences, or `.claude/settings.local.json` for personal permission overrides. Neither is shared with the team.
+
+---
+
+*Generated with [count-tongulas-workspace](https://alextong.me/toolkit/workspace) by [Alex Tong](https://alextong.me)*
