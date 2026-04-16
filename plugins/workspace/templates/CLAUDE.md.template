@@ -1,0 +1,97 @@
+# __TEAM_NAME__ Workspace — Claude Code Instructions
+
+*Last reviewed: __TODAY__*
+<!-- Structure rules: .claude/rules/workspace-scope.md (auto-loaded by Claude Code when editing this file) -->
+
+**This is a MULTI-REPO WORKSPACE, not a single project.** The repos below are cloned as subdirectories. Each repo has its own CLAUDE.md with repo-specific build commands, test runners, and lint configs. This file contains ONLY cross-repo context: relationships, codenames, deploy order, and tribal knowledge. Do not add repo-specific information here.
+
+The repo registry is in `repos.json`. Run `make setup` to clone all repos.
+
+> **Five highest-impact things to add to this file:**
+> 1. System codenames — internal names Claude can't google
+> 2. Cross-repo relationships — which service calls which, deploy order
+> 3. Gotchas — things that have burned your team (include ticket numbers)
+> 4. Non-obvious defaults — things that look standard but aren't
+> 5. Repo map descriptions — expand the auto-generated one-liners below
+>
+> **Maintenance heuristic:** If you deleted a line and Claude would break something in the next 10 sessions, keep it. If Claude could figure it out from the code in 5 minutes, delete it. Update this file whenever Claude gets something wrong.
+
+## Repo Map
+
+> **TODO:** Expand these one-liners. A good entry is 2-4 sentences naming services, deployment modes, key dependencies, and anything unusual. Mark repos your team does NOT own as "context repo, not team-owned." Note any non-standard default branches (e.g., "develop" instead of "main").
+
+__REPO_MAP__
+## Cross-Repo Relationships
+
+> **TODO:** This is the single highest-value section. Without it, Claude treats each repo as independent. Be specific: include API endpoints, in-cluster URLs, data flow direction, timeouts, failure modes. Not just "A calls B."
+
+__CROSS_REPO__
+
+## Key Systems / Codenames
+
+> **TODO:** Map internal names to plain descriptions. Include boundary clarifications and negative assertions (e.g., "Atlas is the search engine. It does NOT handle recommendations.").
+
+| System | What it is |
+|--------|-----------|
+| **TODO** | TODO: Add your team's system codenames |
+
+## Deployment
+
+> **TODO:** Include prose context for anything non-standard: which repos are exceptions, where pipeline files live, ongoing migrations.
+
+__DEPLOY_TABLE__
+
+## Operations
+
+> **TODO:** Include specific URLs, metric names, debugging shortcuts, and known failure modes. These are the notes you wish you had at 2am during an incident.
+
+**Alerting channels:**
+- TODO: Add alert channels
+
+**Ownership:** TODO: Service catalog entry, on-call rotation
+
+**Key operational notes:**
+- TODO: Add known gotchas, debugging tips, dashboard URLs
+
+## Project Tracker
+
+__TRACKER_SECTION__
+
+## Feature Flags
+
+> **TODO:** List feature gates/flags that control your team's features. This helps Claude understand what is behind a flag vs always-on.
+
+TODO: List feature gate names relevant to your team (Statsig, LaunchDarkly, etc.)
+
+## Shared Infrastructure
+
+- **CI/CD**: TODO (GitHub Actions / CircleCI / etc.)
+- **Secrets**: TODO (your secret manager)
+- **Observability**: TODO (Datadog / Grafana / etc.)
+- **Feature flags**: TODO (Statsig / LaunchDarkly / etc.)
+
+## Safety Defaults
+
+Never run destructive commands without explicit approval.
+
+## Git Workflow
+
+- Never push or merge directly to `main` — always use a branch and open a PR
+- Only add relevant files (never use `git add -A` or `git add .`)
+- Include tracker ticket as [__TRACKER_PREFIX__-1234] in commit messages
+- Every commit must compile and pass tests
+
+## Development Guidelines
+
+> **TODO:** Specify which tools/agents to use for each language. Examples: "For Go changes, use table-driven tests." "For TypeScript, use the typescript-pro agent."
+
+- Tests must call actual production code, not simulate it
+- For path-specific rules (e.g., different standards for `*.go` vs `*.ts`), add files to `.claude/rules/` — they only load when Claude touches matching files
+
+## Gotchas
+
+> **TODO:** Add entries when Claude gets something wrong due to missing context. This section compounds over time and becomes the most valuable part of this file. Format: what went wrong / what to do instead. Include ticket numbers.
+>
+> Example: "The cache key uses an MD5 hash of the exact request URL. Extra query params break it silently and return stale data. Cost us 3 hours."
+
+- TODO: Add your first gotcha after the first Claude session

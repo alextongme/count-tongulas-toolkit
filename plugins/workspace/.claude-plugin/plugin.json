@@ -1,0 +1,7 @@
+{
+  "name": "workspace",
+  "description": "Team workspace generator for Claude Code — creates multi-repo workspaces with shared context",
+  "author": {
+    "name": "Alex Tong"
+  }
+}
