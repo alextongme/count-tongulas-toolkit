@@ -1,6 +1,6 @@
-# workspace
+# count-tongulas-workspace
 
-Team workspace generator for Claude Code. Creates multi-repo workspaces with shared context, repo registry, and safety defaults.
+Multi-repo workspace generator for Claude Code. Creates workspaces with shared context, repo registry, and safety defaults — for teams or personal projects.
 
 ## Prerequisites
 
@@ -12,11 +12,11 @@ Team workspace generator for Claude Code. Creates multi-repo workspaces with sha
 
 | Command | Description |
 |---------|-------------|
-| `/workspace:create` | Create a new team workspace |
+| `/count-tongulas-workspace:create` | Create a new workspace |
 
 ## What Gets Generated
 
-Running `/workspace:create` produces a workspace directory with:
+Running `/count-tongulas-workspace:create` produces a workspace directory with:
 
 | File | Description |
 |------|-------------|
@@ -30,21 +30,22 @@ Running `/workspace:create` produces a workspace directory with:
 ## Usage
 
 ```
-/workspace:create
+/count-tongulas-workspace:create
 ```
 
 The command walks you through:
 
-1. Team name and project tracker prefix
-2. Adding repos (supports org/repo, full URLs, SSH URLs)
-3. Auto-grouping by language (or manual grouping)
-4. Generates all workspace files
-5. Initializes a git repo
+1. Choose team or personal mode
+2. Workspace name and (team mode) project tracker prefix
+3. Adding repos (supports user/repo, org/repo, full URLs, SSH URLs)
+4. Auto-grouping by language via GitHub API
+5. Generates all workspace files
+6. Initializes a git repo
 
 After creation, run `make setup` in the new workspace to clone all repos.
 
 ## Installation
 
 ```bash
-/install workspace@count-tongulas-toolkit
+/plugin install count-tongulas-workspace@count-tongulas-toolkit
 ```

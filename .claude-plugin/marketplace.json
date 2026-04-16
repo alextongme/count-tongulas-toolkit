@@ -12,7 +12,7 @@
     {
       "name": "count-tongulas-workspace",
       "source": "./plugins/workspace",
-      "description": "Create team workspaces with shared context across multiple repos — generates repo registry, CLAUDE.md scaffold, Makefile, and bootstrap scripts.",
+      "description": "Create multi-repo workspaces with shared context — for teams or personal projects. Generates repo registry, CLAUDE.md scaffold, Makefile, and bootstrap scripts.",
       "version": "0.1.0",
       "author": {
         "name": "Alex Tong",
