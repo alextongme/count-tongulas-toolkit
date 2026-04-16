@@ -1,7 +1,11 @@
 {
   "name": "count-tongulas-workspace",
+  "version": "0.2.0",
   "description": "Create multi-repo workspaces with shared context — for teams or personal projects",
   "author": {
-    "name": "Alex Tong"
-  }
+    "name": "Alex Tong",
+    "url": "https://alextong.me"
+  },
+  "homepage": "https://alextong.me/toolkit/workspace",
+  "license": "MIT"
 }

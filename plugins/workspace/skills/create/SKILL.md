@@ -1,11 +1,20 @@
 ---
 name: "count-tongulas-workspace:create"
-description: "Create a workspace with shared context across multiple repos — for teams or personal projects"
-model: claude-opus-4-6
-allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Bash(gh api:*)"]
+description: >
+  Create a workspace with shared context across multiple repos — for teams or
+  personal projects. Generates a repo registry, CLAUDE.md scaffold, Makefile,
+  and bootstrap script. Use when the user asks to "set up a workspace",
+  "bootstrap a multi-repo project", "add shared Claude context across repos",
+  or similar. Do NOT use for: single-repo project setup, IDE/editor
+  configuration, CI pipeline scaffolding, or general repo cloning without a
+  shared Claude context layer.
+model: claude-opus-4-7
+allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Bash(gh api:*)", "Bash(pwd:*)", "Read", "Write", "AskUserQuestion"]
 ---
 
 # Workspace Create Command
+
+> From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
 
 Create a new workspace with repo registry, shared context, and safety defaults.
 
@@ -45,7 +54,7 @@ Options:
 
 If `mode = team`, display this notice:
 
-> **Have you checked with your team?** If your team already has a shared workspace, you should use that instead of creating a new one. Ask in your team's chat or check GitHub for an existing `{team}-workspace` repo.
+> **Have you checked with your team?** If your team already has a shared workspace, you should use that instead of creating a new one. Ask in your team's chat or check GitHub for an existing `your-team-workspace` repo.
 
 Use **AskUserQuestion** with options:
 - **"Yes, no existing workspace"** -- proceed
@@ -131,7 +140,15 @@ If the user types "none", "skip", "n/a", or similar, use the literal string `PRE
 
 ### 1d. Output Directory
 
-You MUST ask the user where to put the workspace. Do NOT skip this step or assume a default. Use **AskUserQuestion** with this exact question and these exact four options:
+You MUST ask the user where to put the workspace. Do NOT skip this step or assume a default.
+
+**First, resolve the current working directory** so the last option can show the real path:
+
+    Bash: pwd
+
+Store the result as `cwd` and substitute it into the "Current directory" option label below. Do NOT leave the `{cwd}` placeholder unresolved — users must see the real absolute path.
+
+Then use **AskUserQuestion** with this exact question and these exact four options:
 
 Question: "Where should the workspace be created? (`{slug}-workspace` will be created inside your choice)"
 
@@ -139,7 +156,7 @@ Options:
 - **"Documents (`~/Documents/`)"**
 - **"Desktop (`~/Desktop/`)"**
 - **"Home directory (`~/`)"**
-- **"Current directory (`{cwd}/`)"**
+- **"Current directory (`{cwd}/`)"** — with `{cwd}` replaced by the `pwd` output
 
 After receiving the choice, resolve the full output path as `{parent_dir}/{slug}-workspace`. Resolve `~` to the home directory. Resolve relative paths to absolute.
 
@@ -291,27 +308,30 @@ Repo entries are ALL basenames across all groups, each with trailing `/`.
 
 ### Resolve template directory
 
-Resolve the plugin root to an absolute path:
+Resolve the plugin root to an absolute path. The **Read** tool does NOT expand shell variables like `${CLAUDE_PLUGIN_ROOT}`, so you must capture the absolute path from Bash first:
 
     Bash: ls ${CLAUDE_PLUGIN_ROOT}/templates/
 
 If this fails, STOP: "Plugin templates not found. Reinstall the workspace plugin."
 
-Use the resolved absolute directory path for all Read calls below.
+From the Bash output, derive the absolute `templates_dir` and `references_dir` (the plugin root is the parent of `templates/`). Use these absolute paths — NOT `${CLAUDE_PLUGIN_ROOT}` — for every Read call below.
 
-### Step 1: Create output directory and read all templates (parallel)
+### Step 1: Create output directory, capture today's date, read all templates (parallel)
 
-Create the output directory:
+Create the output directory and get today's date (used for the `__TODAY__` substitution):
 
     Bash: mkdir -p {output_dir}/.claude/rules
+    Bash: date +%Y-%m-%d
 
-Then issue ALL of these **Read** calls in a single message (parallel):
+Store the date output as `today`.
+
+Then issue ALL of these **Read** calls in a single message (parallel), using the absolute paths resolved above:
 - **Read** `{templates_dir}/Makefile`
 - **Read** `{templates_dir}/setup.sh`
 - **Read** `{templates_dir}/CLAUDE.md.template`
 - **Read** `{templates_dir}/README.md.template`
 - **Read** `{templates_dir}/rules/workspace-scope.md`
-- **Read** `${CLAUDE_PLUGIN_ROOT}/skills/create/references/template-substitutions.md`
+- **Read** `{references_dir}/template-substitutions.md`
 
 ### Step 2: Apply substitutions
 
@@ -324,7 +344,7 @@ Using the template contents from Step 1:
 2. **Second: mode-specific language adjustments** (items 3–5 in Mode-Specific Template Adjustments). These match literal prose, not placeholders.
 3. **Third: global substitutions** per the reference file (`__TEAM_NAME__`, `__TODAY__`, `__TRACKER_PREFIX__`, `__REPO_MAP__`, `__DEPLOY_TABLE__`, `__CROSS_REPO__`, `__TRACKER_SECTION__`).
 
-**README.md:** Replace `__TEAM_NAME__` → display name, `__TEAM_SLUG__` → slug. For personal mode, also replace "for the __TEAM_NAME__ team" with "for {display_name} projects", "your-org" with `{github_owner}`, "every engineer on the team gets the same high-quality AI assistance out of the box" with "you get consistent AI assistance across all your projects", and remove the "Personal overrides" section (lines about `CLAUDE.local.md` and sharing with the team).
+**README.md:** Replace `__TEAM_NAME__` → display name, `__TEAM_SLUG__` → slug, and `your-org` → `{github_owner}` (in both modes — the `gh repo clone` example must resolve to a real org/user). For personal mode, also replace "for the __TEAM_NAME__ team" with "for {display_name} projects", "every engineer on the team gets the same high-quality AI assistance out of the box" with "you get consistent AI assistance across all your projects", and remove the "Personal overrides" section (lines about `CLAUDE.local.md` and sharing with the team).
 
 **Makefile** and **setup.sh**: Copy as-is
 
@@ -359,7 +379,9 @@ Then: `chmod +x {output_dir}/setup.sh`
 **Step C — Language adjustments** (find and replace these literal strings):
 7. In the "Five highest-impact things" blockquote: `things that have burned your team` → `things that have bitten you`
 8. In Key Systems / Codenames: `your team's system codenames` → `your system codenames`
-9. In Git Workflow: `Never push or merge directly to \`main\` — always use a branch and open a PR` → `Use branches and PRs for significant changes`
+9. In Git Workflow: replace the ENTIRE line (including the italic Why clause):
+   - From: ``- Never push or merge directly to `main` — always use a branch and open a PR. *Why: direct pushes bypass review and can break shared branches.*``
+   - To:   `- Use branches and PRs for significant changes. *Why: keeps history reviewable even on solo projects.*`
 
 After these adjustments, proceed to global substitutions (step 3 in the ordering above). The `__TEAM_NAME__` placeholder in the title will be replaced with `display_name` by the global substitution — no special handling needed.
 
@@ -442,6 +464,10 @@ Display:
 
 If there were metadata fetch failures from Phase 3, append:
 "**Note**: Could not fetch metadata for: {list}. Update descriptions in repos.json manually."
+
+Then, on a new line below the summary, print this attribution line (plain text, outside any code block):
+
+> *Scaffolded with [count-tongulas-workspace](https://alextong.me/toolkit/workspace) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)*
 
 ## Error Handling
 

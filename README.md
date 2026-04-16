@@ -13,16 +13,20 @@ Add the marketplace once:
 Then install any plugin:
 
 ```
-/plugin install pr-summary-generator
-/plugin install worksheet-maker
+/plugin install count-tongulas-workspace@count-tongulas-toolkit
+/plugin install pr@count-tongulas-toolkit
+/plugin install education@count-tongulas-toolkit
+/plugin install claude-brain@count-tongulas-toolkit
 ```
 
 ## Plugins
 
 | Plugin | What it does | Walkthrough |
 |--------|--------------|-------------|
-| `pr-summary-generator` | Generates structured PR descriptions from the current branch diff. Built for AI-assisted development where the PR body is the primary review artifact. | [The PR Description Is the New Code Review](https://alextong.me/newsletter/code-review-wrong) |
-| `worksheet-maker` | Creates beautiful, printable educational worksheets as self-contained HTML files. For any grade level, subject, or audience. | [alextong.me/toolkit](https://alextong.me/toolkit) |
+| `count-tongulas-workspace` | Creates multi-repo workspaces with shared Claude context — generates a repo registry, CLAUDE.md scaffold, Makefile, and bootstrap script. | [alextong.me/toolkit/workspace](https://alextong.me/toolkit/workspace) |
+| `pr` | Generates structured PR descriptions from the current branch diff. Built for AI-assisted development where the PR body is the primary review artifact. | [The PR Description Is the New Code Review](https://alextong.me/newsletter/code-review-wrong) |
+| `education` | Creates beautiful, printable educational worksheets as self-contained HTML files. For any grade level, subject, or audience. | [alextong.me/toolkit](https://alextong.me/toolkit) |
+| `claude-brain` | Audits CLAUDE.md and `.claude/rules/` files for staleness, contradictions, and missing context. | [alextong.me/toolkit](https://alextong.me/toolkit) |
 
 ## Why a marketplace?
 

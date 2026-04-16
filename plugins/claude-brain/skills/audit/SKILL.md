@@ -1,10 +1,19 @@
 ---
-description: "Review and score CLAUDE.md and .claude/rules/ files — use when asked to review, check, improve, rate, or audit Claude instruction files in any repo, or when someone asks 'is my CLAUDE.md good?' or 'why is Claude ignoring my instructions?'"
-model: claude-opus-4-6
+name: "claude-brain:audit"
+description: >
+  Review and score CLAUDE.md and .claude/rules/ files — use when asked to
+  review, check, improve, rate, or audit Claude instruction files in any repo,
+  or when someone asks "is my CLAUDE.md good?" or "why is Claude ignoring my
+  instructions?". Do NOT use for: writing new CLAUDE.md files from scratch,
+  generating code documentation, reviewing non-Claude config files, or general
+  repository audits unrelated to Claude context quality.
+model: claude-opus-4-7
 allowed-tools: ["Read", "Glob", "Grep"]
 ---
 
 # CLAUDE.md Audit
+
+> From [Count Tongula's Toolkit](https://alextong.me/toolkit) by [Alex Tong](https://alextong.me) — more at [alextong.me/newsletter](https://alextong.me/newsletter)
 
 You are a Claude Code instruction file auditor. Analyze all CLAUDE.md files and `.claude/rules/` files in the current repository against proven best practices and produce a structured scorecard with actionable recommendations.
 

@@ -86,10 +86,21 @@ clone_repo() {
     # Prompt before touching a non-git directory — it may contain user data
     if [[ -d "$target" ]] && [[ ! -d "$target/.git" ]]; then
         warn "$name directory exists but is not a git repo"
+        if [[ ! -t 0 ]]; then
+            warn "Non-interactive shell — skipping $name (re-run interactively to override)"
+            return 0
+        fi
         printf "  Options: [r]emove and clone fresh, [s]kip, [q]uit: "
         read -r choice || true
         case "$choice" in
             r|R)
+                # Belt-and-braces: refuse to rm unless $name is a safe basename.
+                # Phase 2 already validates repo names, but $target = $WORKSPACE_DIR/$name
+                # — if $name were ever ".", "..", or path-like, rm -rf would escape the workspace.
+                if [[ ! "$name" =~ ^[A-Za-z0-9_.-]+$ ]] || [[ "$name" == "." ]] || [[ "$name" == ".." ]]; then
+                    err "Refusing to remove: unsafe repo name '$name'"
+                    return 1
+                fi
                 rm -rf "$target"
                 log "Removed $target — cloning fresh..."
                 ;;
@@ -235,7 +246,21 @@ install_plugin() {
     fi
 }
 
+ensure_marketplace() {
+    # Idempotent: add the official marketplace if it isn't registered yet.
+    # `claude plugin install X@Y` requires Y to be added first.
+    local marketplace="$1"
+    if claude plugin marketplace list 2>/dev/null | grep -qF "$marketplace"; then
+        return 0
+    fi
+    log "Registering marketplace: $marketplace"
+    claude plugin marketplace add "$marketplace" 2>/dev/null \
+        && ok "Marketplace $marketplace registered" \
+        || warn "Could not register marketplace $marketplace — plugin installs may fail"
+}
+
 if command -v claude &>/dev/null; then
+    ensure_marketplace "claude-plugins-official"
     INSTALLED_LIST=$(claude plugin list 2>/dev/null || true)
     PLUGINS_TO_INSTALL=()
     PLUGINS_TO_INSTALL_IDX=()
@@ -264,10 +289,20 @@ if command -v claude &>/dev/null; then
     if [[ ${#PLUGINS_TO_INSTALL[@]} -eq 0 ]]; then
         echo ""
         ok "All recommended plugins already installed"
+    elif [[ ! -t 0 ]]; then
+        # Non-interactive shell (CI, piped input): never silently install third-party
+        # plugins based on a defaulted answer. Use "n" so the case below prints the
+        # manual install commands and skips.
+        echo ""
+        warn "Non-interactive shell detected — skipping recommended plugin install."
+        plugin_choice="n"
     else
         echo ""
         read -rp "$(echo -e "${BLUE}[workspace]${NC}") Install ${#PLUGINS_TO_INSTALL[@]} plugin(s)? [A]ll (default) / [n]one / [c]hoose: " plugin_choice || true
         plugin_choice="${plugin_choice:-a}"
+    fi
+
+    if [[ ${#PLUGINS_TO_INSTALL[@]} -gt 0 ]]; then
         case "$plugin_choice" in
             [Aa]|"")
                 for plugin in "${PLUGINS_TO_INSTALL[@]}"; do

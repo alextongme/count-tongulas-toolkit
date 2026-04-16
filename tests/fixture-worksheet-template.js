@@ -9,8 +9,7 @@
 // - leave text left-aligned (never justified)
 
 const fs = require("fs");
-const TPL =
-  "plugins/worksheet-maker/skills/worksheet-maker/references/base-template.html";
+const TPL = "plugins/education/skills/worksheet/references/base-template.html";
 
 const content = fs.readFileSync(TPL, "utf8");
 
