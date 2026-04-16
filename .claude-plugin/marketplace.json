@@ -10,7 +10,7 @@
   },
   "plugins": [
     {
-      "name": "workspace",
+      "name": "count-tongulas-workspace",
       "source": "./plugins/workspace",
       "description": "Create team workspaces with shared context across multiple repos — generates repo registry, CLAUDE.md scaffold, Makefile, and bootstrap scripts.",
       "version": "0.1.0",
