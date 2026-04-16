@@ -1,4 +1,5 @@
 ---
+name: "workspace:create"
 description: "Create a workspace with shared context across multiple repos — for teams or personal projects"
 model: claude-opus-4-6
 allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Bash(gh api:*)"]
@@ -107,6 +108,8 @@ Set `display_name` to the user's original input (before sanitization, but trimme
 **Team mode only:** Ask the user: "What is your GitHub organization? (e.g., `acme-corp`)"
 
 Set `github_owner` to their response. If they say they don't have one or leave it empty, set `github_owner = github_user` and inform them: "No org — using your personal account `{github_user}`."
+
+**Validate `github_owner`:** The value must match `^[a-zA-Z0-9_.-]+$`. If it contains spaces, slashes, or other invalid characters, tell the user: "GitHub org/user names can only contain letters, numbers, hyphens, underscores, and dots." Then re-ask.
 
 **Personal mode:** `github_owner` was already set in Phase 0. Skip asking.
 
