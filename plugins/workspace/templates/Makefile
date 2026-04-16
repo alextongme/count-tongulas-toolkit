@@ -5,7 +5,7 @@ REPOS_JSON    := $(WORKSPACE_DIR)/repos.json
 # Uses repos.json as the source of truth — only directories that exist AND are
 # listed in repos.json are included. This avoids hardcoding repo names.
 # Guard: skip if repos.json doesn't exist yet or jq is missing.
-REPO_NAMES := $(if $(wildcard $(REPOS_JSON)),$(shell command -v jq >/dev/null 2>&1 && jq -r '.[].[] | .name' $(REPOS_JSON) 2>/dev/null))
+REPO_NAMES := $(if $(wildcard $(REPOS_JSON)),$(shell command -v jq >/dev/null 2>&1 && jq -r 'to_entries[] | select(.key != "_meta") | .value[] | .name' $(REPOS_JSON) 2>/dev/null))
 REPO_DIRS  := $(foreach name,$(REPO_NAMES),$(wildcard $(WORKSPACE_DIR)/$(name)/))
 
 .PHONY: setup setup-full update status search help gitignore
@@ -53,7 +53,7 @@ endif
 gitignore:
 	@if [ ! -f "$(REPOS_JSON)" ]; then echo "repos.json not found" >&2; exit 1; fi
 	@echo "# Cloned repos (auto-generated from repos.json — run 'make gitignore' to update)" > $(WORKSPACE_DIR)/.gitignore
-	@jq -r '.[].[] | .name + "/"' $(REPOS_JSON) >> $(WORKSPACE_DIR)/.gitignore
+	@jq -r 'to_entries[] | select(.key != "_meta") | .value[] | .name + "/"' $(REPOS_JSON) >> $(WORKSPACE_DIR)/.gitignore
 	@echo "" >> $(WORKSPACE_DIR)/.gitignore
 	@echo "# OS" >> $(WORKSPACE_DIR)/.gitignore
 	@echo ".DS_Store" >> $(WORKSPACE_DIR)/.gitignore
@@ -69,7 +69,7 @@ gitignore:
 	@echo "!.claude/agents/" >> $(WORKSPACE_DIR)/.gitignore
 	@echo "!.claude/rules/" >> $(WORKSPACE_DIR)/.gitignore
 	@echo "CLAUDE.local.md" >> $(WORKSPACE_DIR)/.gitignore
-	@echo "Updated .gitignore with $$(jq '[.[].[] | .name] | length' $(REPOS_JSON)) repo entries"
+	@echo "Updated .gitignore with $$(jq '[to_entries[] | select(.key != "_meta") | .value[] | .name] | length' $(REPOS_JSON)) repo entries"
 
 ## Show available targets
 help:
