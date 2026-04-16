@@ -1,0 +1,7 @@
+{
+  "name": "claude-md-audit",
+  "description": "Review and score CLAUDE.md and .claude/rules/ files — scores signal, flags noise, and suggests improvements",
+  "author": {
+    "name": "Alex Tong"
+  }
+}
