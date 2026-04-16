@@ -28,7 +28,7 @@ Options:
   -h, --help       Show this help message
 
 Repo groups (from repos.json):
-$(jq -r 'to_entries[] | select(.key != "_meta") | "\(.key): \(.value | map(.name) | join(", "))"' "$REPOS_JSON" 2>/dev/null | sed 's/^/  /' || echo "  (run from workspace directory to see groups)")
+$(jq -r 'keys[] as $k | "  \($k): \(.[$k] | map(.name) | join(", "))"' "$REPOS_JSON" 2>/dev/null || echo "  (run from workspace directory to see groups)")
 EOF
     exit 0
 }
@@ -128,7 +128,7 @@ clone_group() {
 log "Updating .gitignore from repos.json..."
 {
     echo "# Cloned repos (auto-generated from repos.json — run 'make gitignore' to update)"
-    jq -r 'to_entries[] | select(.key != "_meta") | .value[] | .name + "/"' "$REPOS_JSON"
+    jq -r '.[].[] | .name + "/"' "$REPOS_JSON"
     echo ""
     echo "# OS"
     echo ".DS_Store"
@@ -148,7 +148,7 @@ log "Updating .gitignore from repos.json..."
 ok ".gitignore updated"
 
 # Clone all groups defined in repos.json
-for group in $(jq -r 'keys[] | select(. != "_meta")' "$REPOS_JSON"); do
+for group in $(jq -r 'keys[]' "$REPOS_JSON"); do
     log "Cloning $group repos..."
     clone_group "$group"
 done
@@ -203,7 +203,7 @@ bootstrap_repo() {
 }
 
 log "Bootstrapping repos..."
-for group in $(jq -r 'keys[] | select(. != "_meta")' "$REPOS_JSON"); do
+for group in $(jq -r 'keys[]' "$REPOS_JSON"); do
     count=$(jq -r ".\"$group\" | length" "$REPOS_JSON")
     for ((i = 0; i < count; i++)); do
         name=$(jq -r ".\"$group\"[$i].name" "$REPOS_JSON")
@@ -322,7 +322,7 @@ echo -e "${GREEN}  Workspace setup complete!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""
 echo "Cloned repos:"
-for group in $(jq -r 'keys[] | select(. != "_meta")' "$REPOS_JSON"); do
+for group in $(jq -r 'keys[]' "$REPOS_JSON"); do
     count=$(jq -r ".\"$group\" | length" "$REPOS_JSON")
     for ((i = 0; i < count; i++)); do
         name=$(jq -r ".\"$group\"[$i].name" "$REPOS_JSON")
