@@ -6,51 +6,9 @@
   },
   "metadata": {
     "description": "Free Claude Code plugins from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
-    "version": "0.8.0"
+    "version": "0.9.0"
   },
   "plugins": [
-    {
-      "name": "pr-summary-generator",
-      "source": "./plugins/pr-summary-generator",
-      "description": "Generate structured PR descriptions from the current branch diff — built for AI-assisted development where the PR body is the primary review artifact.",
-      "version": "0.1.0",
-      "author": {
-        "name": "Alex Tong",
-        "url": "https://alextong.me"
-      },
-      "category": "dev-workflow",
-      "keywords": ["git", "github", "pull-request", "code-review", "pr"],
-      "homepage": "https://alextong.me/toolkit",
-      "license": "MIT"
-    },
-    {
-      "name": "worksheet-maker",
-      "source": "./plugins/worksheet-maker",
-      "description": "Create beautiful, printable educational worksheets as self-contained HTML files — for any grade level, subject, or audience. Primary use case: teaching software engineering and tech concepts.",
-      "version": "0.1.0",
-      "author": {
-        "name": "Alex Tong",
-        "url": "https://alextong.me"
-      },
-      "category": "education",
-      "keywords": ["education", "worksheet", "teaching", "printable", "html"],
-      "homepage": "https://alextong.me/toolkit",
-      "license": "MIT"
-    },
-    {
-      "name": "claude-md-audit",
-      "source": "./plugins/claude-md-audit",
-      "description": "Audit CLAUDE.md files for staleness, contradictions, and missing context — scores each file and produces a fix-it checklist.",
-      "version": "0.1.0",
-      "author": {
-        "name": "Alex Tong",
-        "url": "https://alextong.me"
-      },
-      "category": "dev-workflow",
-      "keywords": ["claude-md", "audit", "context", "quality"],
-      "homepage": "https://alextong.me/toolkit",
-      "license": "MIT"
-    },
     {
       "name": "workspace",
       "source": "./plugins/workspace",
@@ -63,6 +21,48 @@
       "category": "dev-workflow",
       "keywords": ["workspace", "monorepo", "multi-repo", "team", "context", "scaffold"],
       "homepage": "https://alextong.me/toolkit/workspace",
+      "license": "MIT"
+    },
+    {
+      "name": "pr",
+      "source": "./plugins/pr",
+      "description": "PR workflow skills — generate structured PR descriptions from your branch diff.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alex Tong",
+        "url": "https://alextong.me"
+      },
+      "category": "dev-workflow",
+      "keywords": ["git", "github", "pull-request", "code-review", "pr"],
+      "homepage": "https://alextong.me/toolkit",
+      "license": "MIT"
+    },
+    {
+      "name": "education",
+      "source": "./plugins/education",
+      "description": "Educational content skills — create beautiful, printable worksheets as self-contained HTML files for any grade level, subject, or audience.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alex Tong",
+        "url": "https://alextong.me"
+      },
+      "category": "education",
+      "keywords": ["education", "worksheet", "teaching", "printable", "html"],
+      "homepage": "https://alextong.me/toolkit",
+      "license": "MIT"
+    },
+    {
+      "name": "claude-brain",
+      "source": "./plugins/claude-brain",
+      "description": "Claude Code context quality skills — audit CLAUDE.md and .claude/rules/ files for staleness, contradictions, and missing context.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alex Tong",
+        "url": "https://alextong.me"
+      },
+      "category": "dev-workflow",
+      "keywords": ["claude-md", "audit", "context", "quality", "instructions"],
+      "homepage": "https://alextong.me/toolkit",
       "license": "MIT"
     }
   ]
