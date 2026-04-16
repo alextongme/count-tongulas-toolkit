@@ -1,18 +1,48 @@
 ---
-description: "Create a team workspace with shared context across multiple repos"
+description: "Create a workspace with shared context across multiple repos — for teams or personal projects"
 model: claude-opus-4-6
-allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)"]
+allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Bash(gh api:*)"]
 ---
 
 # Workspace Create Command
 
-Create a new team workspace with repo registry, shared context, and safety defaults.
+Create a new workspace with repo registry, shared context, and safety defaults.
 
 **CRITICAL: Execute every phase and every step in order. Do NOT skip, combine, or assume defaults for any step — even if you think you know the answer from context. Every AskUserQuestion must be shown to the user.**
 
+## Variables Set During Setup
+
+Track these as you go — they're referenced across multiple phases:
+
+| Variable | Set in | Used in |
+|----------|--------|---------|
+| `mode` | Before You Start | Phases 1–7 (controls which steps run and template language) |
+| `github_owner` | Phase 0 (personal) or 1b (team) | Phases 1b, 2, 7 |
+| `slug` | Phase 1a | Phases 1b, 1d, 5–7 |
+| `display_name` | Phase 1a | Phases 6–7 |
+| `tracker_prefix` | Phase 1c (team only) | Phases 6–7 |
+| `output_dir` | Phase 1d | Phases 5–7 |
+
 ## Before You Start
 
-Display this notice:
+Use **AskUserQuestion** with this exact question and these exact three options:
+
+Question: "What kind of workspace are you setting up?"
+
+Options:
+- **"Team workspace — for an engineering team at a company"** -- set `mode = team`
+- **"Personal workspace — for my own projects"** -- set `mode = personal`
+- **"Not sure — explain the difference"** -- display the explanation below, then re-ask
+
+**Explanation (only if "Not sure" is selected):**
+
+> **Team workspace** is for engineering teams that share multiple repos. It scaffolds a CLAUDE.md with sections for system codenames, cross-repo relationships, deployment info, and tribal knowledge — context that helps every engineer on the team get consistent AI assistance. The workspace is meant to be committed to GitHub and shared.
+>
+> **Personal workspace** is for individual developers who work across several of their own repos. Same scaffolding, but without team-specific sections like project trackers, on-call rotations, or ownership. It's your personal AI context layer.
+
+### Team mode only: check for existing workspace
+
+If `mode = team`, display this notice:
 
 > **Have you checked with your team?** If your team already has a shared workspace, you should use that instead of creating a new one. Ask in your team's chat or check GitHub for an existing `{team}-workspace` repo.
 
@@ -20,14 +50,21 @@ Use **AskUserQuestion** with options:
 - **"Yes, no existing workspace"** -- proceed
 - **"Not sure, let me check first"** -- STOP and tell the user to check with their team, then re-run `/workspace:create` when ready
 
-Do NOT proceed until the user confirms.
+Do NOT proceed until the user confirms. **Skip this entirely for personal mode.**
 
 ## Phase 0: Pre-flight Checks
 
-Run prerequisite checks. Use separate Bash calls so you can report ALL missing tools at once:
+Run prerequisite checks. Use **three separate Bash calls** so you can report ALL missing tools at once (do NOT chain with `&&`):
 
-    Bash: command -v gh && command -v jq && command -v git
+    Bash: command -v gh
+    Bash: command -v jq
+    Bash: command -v git
+
+Then check auth:
+
     Bash: gh auth status 2>&1
+
+`jq` is not used in this skill directly, but the generated Makefile and setup.sh require it — it must be installed before the workspace is usable.
 
 If ANY check fails, STOP and list everything that needs fixing:
 - Missing `gh`: "Install GitHub CLI: `brew install gh && gh auth login`"
@@ -37,35 +74,55 @@ If ANY check fails, STOP and list everything that needs fixing:
 
 Do NOT proceed past Phase 0 until all checks pass.
 
-## Phase 1: Gather Team Information
+### Detect GitHub identity
 
-### 1a. Team Name (required)
+After all checks pass, detect the authenticated GitHub user:
+
+    Bash: gh api user --jq '.login'
+
+Store the result as `github_user`.
+
+- **Personal mode:** Set `github_owner = github_user`. Print: "Using your GitHub account `{github_user}` for repo lookups." Do NOT ask for an org — proceed directly.
+- **Team mode:** `github_owner` will be set in Phase 1b (the user is asked explicitly).
+
+## Phase 1: Gather Information
+
+### 1a. Workspace Name (required)
 
 Print this as plain text (do NOT use AskUserQuestion — let the user type freely):
 
-"What is your team name? This becomes your workspace folder name (e.g., Platform -> `platform-workspace`)."
+- **Team mode:** "What is your team name? This becomes your workspace folder name (e.g., Platform → `platform-workspace`)."
+- **Personal mode:** "What do you want to call this workspace? This becomes the folder name (e.g., side-projects → `side-projects-workspace`)."
 
 Wait for the user's response.
 
-**Sanitize to slug**: lowercase -> spaces to hyphens -> strip characters not in `[a-z0-9-]` -> collapse consecutive hyphens -> strip leading/trailing hyphens.
+**Sanitize to slug**: lowercase → spaces to hyphens → strip characters not in `[a-z0-9-]` → collapse consecutive hyphens → strip leading/trailing hyphens.
 
 If the slug is empty after sanitization, ask again.
 
+Set `display_name` to the user's original input (before sanitization, but trimmed).
+
 ### 1b. GitHub Naming Conflict Check
 
-Ask the user for their GitHub org name. Default to their `gh` authenticated user if they don't have one.
+**Team mode only:** Ask the user: "What is your GitHub organization? (e.g., `acme-corp`)"
 
-Check if `{slug}-workspace` already exists:
+Set `github_owner` to their response. If they say they don't have one or leave it empty, set `github_owner = github_user` and inform them: "No org — using your personal account `{github_user}`."
 
-    Bash: gh repo view {org}/{slug}-workspace --json name 2>&1
+**Personal mode:** `github_owner` was already set in Phase 0. Skip asking.
+
+**Both modes:** Check if `{slug}-workspace` already exists:
+
+    Bash: gh repo view {github_owner}/{slug}-workspace --json name 2>&1
 
 - Exit 0 = repo exists. Warn and use **AskUserQuestion**: "Use a different name" or "Continue anyway"
 - "not found" or "Could not resolve" = doesn't exist. Proceed silently
 - Any other error = prerequisite problem. STOP and tell the user to fix it
 
-### 1c. Project Tracker Prefix (optional)
+### 1c. Project Tracker Prefix (team mode only)
 
-Ask: "What is your project tracker prefix? (e.g., PAY, PLAT — leave empty to skip)"
+**Skip this step entirely for personal mode.** Set `tracker_prefix = null`.
+
+**Team mode:** Ask: "What is your project tracker prefix? (e.g., PAY, PLAT — leave empty to skip)"
 
 If empty, use the literal string `PREFIX` as placeholder in templates.
 
@@ -99,7 +156,7 @@ End Phase 1 by printing this message as plain text. **Do not call AskUserQuestio
 
 > Enter all your repos in one message — comma-separated, space-separated, or one per line all work. Any format:
 > - Just the repo name (e.g., `payments-api`)
-> - `org/payments-api`
+> - `org/payments-api` or `username/my-project`
 > - GitHub URL (e.g., `https://github.com/org/payments-api`)
 > - SSH URL (e.g., `git@github.com:org/payments-api.git`)
 >
@@ -115,7 +172,7 @@ The user's message contains their complete repo list. Parse all identifiers in a
 
 **Split:** Split on newlines. For each line, strip leading whitespace, markdown bullets (`- `, `* `), and numbering (`\d+\. ` prefix). Then split each line on commas. Then split each segment on whitespace. Process each resulting token individually.
 
-**Normalize:** Strip `https://github.com/`, `http://github.com/`, `ssh://git@github.com/`, or `git@github.com:` prefixes. Strip `.git` suffix. Take only the first two `/`-separated segments. **If a token has no `/` (bare repo name), ask the user for their default GitHub org** (only once, then reuse for all bare names).
+**Normalize:** Strip `https://github.com/`, `http://github.com/`, `ssh://git@github.com/`, or `git@github.com:` prefixes. Strip `.git` suffix. Take only the first two `/`-separated segments. **If a token has no `/` (bare repo name), prefix it with `{github_owner}/`** (already known from Phase 0 or 1b — do NOT re-ask).
 
 **Validate:** Must match `^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$`. Skip invalid tokens silently -- prose fragments and descriptions naturally become invalid after splitting and are harmless.
 
@@ -171,8 +228,10 @@ Print the grouping as informational output (e.g., "`go` (2): payments-api, billi
 ## Checkpoint
 
 Before generating files, display accumulated state:
-- Team: {display name} / Slug: {slug}
-- Tracker: {prefix or "none"}
+- Mode: {team or personal}
+- Name: {display name} / Slug: {slug}
+- GitHub owner: {github_owner}
+- Tracker: {prefix or "none" or "n/a (personal)"}
 - Output: {absolute path}
 - Repos: {count} in {group count} groups
 - Metadata failures: {list or "none"}
@@ -256,9 +315,15 @@ Then issue ALL of these **Read** calls in a single message (parallel):
 Print before starting: "Generating workspace files — the CLAUDE.md template takes a few minutes."
 
 Using the template contents from Step 1:
-- **CLAUDE.md**: Apply all substitutions per the reference file
-- **README.md**: Replace `__TEAM_NAME__` -> display name, `__TEAM_SLUG__` -> slug
-- **Makefile** and **setup.sh**: Copy as-is
+
+**CLAUDE.md — apply in this exact order:**
+1. **First: mode-specific section removals** (see Mode-Specific Template Adjustments below). Remove entire sections and lines while placeholders are still identifiable.
+2. **Second: mode-specific language adjustments** (items 3–5 in Mode-Specific Template Adjustments). These match literal prose, not placeholders.
+3. **Third: global substitutions** per the reference file (`__TEAM_NAME__`, `__TODAY__`, `__TRACKER_PREFIX__`, `__REPO_MAP__`, `__DEPLOY_TABLE__`, `__CROSS_REPO__`, `__TRACKER_SECTION__`).
+
+**README.md:** Replace `__TEAM_NAME__` → display name, `__TEAM_SLUG__` → slug. For personal mode, also replace "for the __TEAM_NAME__ team" with "for {display_name} projects", "your-org" with `{github_owner}`, "every engineer on the team gets the same high-quality AI assistance out of the box" with "you get consistent AI assistance across all your projects", and remove the "Personal overrides" section (lines about `CLAUDE.local.md` and sharing with the team).
+
+**Makefile** and **setup.sh**: Copy as-is
 
 ### Step 3: Write all output files (parallel)
 
@@ -271,6 +336,29 @@ Issue ALL of these in a single message. **Do NOT re-write repos.json or .gitigno
 - **Write** `{output_dir}/README.md`
 
 Then: `chmod +x {output_dir}/setup.sh`
+
+### Mode-Specific Template Adjustments (Personal Mode Only)
+
+**For team mode, skip this entirely** — the template is written for teams by default.
+
+**For personal mode, apply these before global substitutions, in the order listed:**
+
+**Step A — Section removals** (delete the heading AND all content until the next `##` heading):
+1. `## Operations`
+2. `## Project Tracker` (also removes the `__TRACKER_SECTION__` placeholder)
+3. `## Feature Flags`
+4. `## Shared Infrastructure`
+
+**Step B — Line removals:**
+5. Delete the line containing `Include tracker ticket as [__TRACKER_PREFIX__-1234] in commit messages`
+6. In the Repo Map TODO blockquote, delete the sentence containing `Mark repos your team does NOT own`
+
+**Step C — Language adjustments** (find and replace these literal strings):
+7. In the "Five highest-impact things" blockquote: `things that have burned your team` → `things that have bitten you`
+8. In Key Systems / Codenames: `your team's system codenames` → `your system codenames`
+9. In Git Workflow: `Never push or merge directly to \`main\` — always use a branch and open a PR` → `Use branches and PRs for significant changes`
+
+After these adjustments, proceed to global substitutions (step 3 in the ordering above). The `__TEAM_NAME__` placeholder in the title will be replaced with `display_name` by the global substitution — no special handling needed.
 
 ## Phase 7: Finalize and Summary
 
@@ -299,6 +387,7 @@ Display:
 | `.claude/CLAUDE.md` | Scaffolded with repo map and deployment table |
 | `Makefile` | Workspace commands (setup, update, status, search) |
 | `setup.sh` | Bootstrap script (clone, build, plugins) |
+| `.claude/rules/workspace-scope.md` | Rules for editing CLAUDE.md in workspace context |
 | `README.md` | Workspace documentation with prereqs and plugins |
 
 ### Next Steps
@@ -310,7 +399,11 @@ Display:
    (Optional: edit `repos.json` first to regroup — groups only affect
    how repos are organized in CLAUDE.md, not what gets cloned)
 
-2. Fill in what code scanning can't discover -- the tribal knowledge in `.claude/CLAUDE.md`:
+2. Fill in what code scanning can't discover — the context in `.claude/CLAUDE.md`:
+```
+
+**Team mode next steps (2–6):**
+```
    - **System codenames** -- internal names Claude can't google
    - **Cross-repo relationships** -- which service calls which, deploy order
    - **Gotchas** -- things that have burned your team (include ticket numbers)
@@ -324,7 +417,24 @@ Display:
    `make help`
 
 6. Publish to GitHub:
-   `gh repo create {org}/{slug}-workspace --private --source=. --push`
+   `gh repo create {github_owner}/{slug}-workspace --private --source=. --push`
+```
+
+**Personal mode next steps (2–6):**
+```
+   - **Cross-repo relationships** -- which project depends on which
+   - **Gotchas** -- things that have bitten you before
+
+3. Commit the scaffold:
+   `git add . && git commit -m "scaffold"`
+
+4. Let Claude scan the cloned code and enrich your CLAUDE.md -- start Claude (`claude`), then type `/init`. After it finishes, review with `git diff`.
+
+5. See all available workspace commands:
+   `make help`
+
+6. Publish to GitHub:
+   `gh repo create {github_owner}/{slug}-workspace --private --source=. --push`
 ```
 
 If there were metadata fetch failures from Phase 3, append:
@@ -334,8 +444,10 @@ If there were metadata fetch failures from Phase 3, append:
 
 | Phase | Error | Action |
 |-------|-------|--------|
-| Pre | User unsure about existing workspace | STOP, tell them to check with team first |
+| Pre | User unsure about workspace type | Explain the difference, re-ask |
+| Pre | User unsure about existing workspace (team) | STOP, tell them to check with team first |
 | 0 | Missing tool or auth | STOP, report ALL missing tools at once |
+| 0 | Cannot detect GitHub user | STOP, tell user to run `gh auth login` |
 | 1 | Slug empty | Re-ask |
 | 1 | Repo already exists on GitHub | Warn, offer rename or continue |
 | 1 | Output dir not specified | Always prompt, no silent default |
