@@ -35,6 +35,15 @@ __CROSS_REPO__
 |--------|-----------|
 | **TODO** | TODO: Add your team's system codenames |
 
+## Non-Obvious Defaults
+
+> **TODO:** Document anything that looks standard but isn't — branch names, package managers, port numbers, env requirements, timestamp formats, naming conventions. If Claude would assume the default and be wrong, put it here.
+
+| Default | Actual |
+|---------|--------|
+| **TODO** | TODO: e.g., "Main branch is `develop`, not `main`" |
+| **TODO** | TODO: e.g., "Timestamps are epoch seconds, not milliseconds" |
+
 ## Deployment
 
 > **TODO:** Include prose context for anything non-standard: which repos are exceptions, where pipeline files live, ongoing migrations.
@@ -68,18 +77,29 @@ TODO: List feature gate names relevant to your team (Statsig, LaunchDarkly, etc.
 - **CI/CD**: TODO (GitHub Actions / CircleCI / etc.)
 - **Secrets**: TODO (your secret manager)
 - **Observability**: TODO (Datadog / Grafana / etc.)
-- **Feature flags**: TODO (Statsig / LaunchDarkly / etc.)
+
+## Decision Framework
+
+> **TODO:** Add priority ordering for when multiple approaches are valid. This helps Claude make judgment calls instead of asking.
+>
+> Example: "Prioritize: correctness > testability > readability > performance"
+
+TODO: Add your team's priority ordering
 
 ## Safety Defaults
 
-Never run destructive commands without explicit approval.
+> **TODO:** Add behavioral guardrails — attempt limits, confirmation requirements, forbidden actions. These constrain Claude's behavior when it encounters ambiguity.
+
+- Never run destructive commands without explicit approval
+- TODO: e.g., "3 attempts max per failing test fix, then STOP and show what failed"
+- TODO: e.g., "Always confirm before modifying shared config files"
 
 ## Git Workflow
 
-- Never push or merge directly to `main` — always use a branch and open a PR
-- Only add relevant files (never use `git add -A` or `git add .`)
+- Never push or merge directly to `main` — always use a branch and open a PR. *Why: direct pushes bypass review and can break shared branches.*
+- Only add relevant files (never use `git add -A` or `git add .`). *Why: glob adds can commit secrets, env files, or build artifacts.*
 - Include tracker ticket as [__TRACKER_PREFIX__-1234] in commit messages
-- Every commit must compile and pass tests
+- Every commit must compile and pass tests. *Why: broken intermediate commits block bisecting and cherry-picks.*
 
 ## Development Guidelines
 
