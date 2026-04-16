@@ -1,6 +1,6 @@
 {
-  "name": "workspace",
-  "description": "Team workspace generator for Claude Code — creates multi-repo workspaces with shared context",
+  "name": "count-tongulas-workspace",
+  "description": "Create multi-repo workspaces with shared context — for teams or personal projects",
   "author": {
     "name": "Alex Tong"
   }
