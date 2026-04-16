@@ -1,5 +1,5 @@
 ---
-name: "workspace:create"
+name: "count-tongulas-workspace:create"
 description: "Create a workspace with shared context across multiple repos — for teams or personal projects"
 model: claude-opus-4-6
 allowed-tools: ["Bash(gh repo view:*)", "Bash(gh auth status:*)", "Bash(git init:*)", "Bash(chmod +x:*)", "Bash(date:*)", "Bash(command -v:*)", "Bash(mkdir:*)", "Bash(ls:*)", "Bash(gh api:*)"]
