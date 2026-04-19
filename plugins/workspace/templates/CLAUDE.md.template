@@ -5,6 +5,8 @@
 
 **This is a MULTI-REPO WORKSPACE, not a single project.** The repos below are cloned as subdirectories. Each repo has its own CLAUDE.md with repo-specific build commands, test runners, and lint configs. This file contains ONLY cross-repo context: relationships, codenames, deploy order, and tribal knowledge. Do not add repo-specific information here.
 
+> **Before any `git` command, verify your working directory.** Each repo in this workspace has its own git history. Run `pwd` before `git status`, `git add`, `git commit`, `git push`, or any destructive git operation — a commit in the wrong repo is a real source of bugs, not a hypothetical one.
+
 The repo registry is in `repos.json`. Run `make setup` to clone all repos.
 
 > **Five highest-impact things to add to this file:**
@@ -12,20 +14,42 @@ The repo registry is in `repos.json`. Run `make setup` to clone all repos.
 > 2. Cross-repo relationships — which service calls which, deploy order
 > 3. Gotchas — things that have burned your team (include ticket numbers)
 > 4. Non-obvious defaults — things that look standard but aren't
-> 5. Repo map descriptions — expand the auto-generated one-liners below
+> 5. Shared-library boundaries — which utilities belong in which repo, to prevent duplicate code
 >
 > **Maintenance heuristic:** If you deleted a line and Claude would break something in the next 10 sessions, keep it. If Claude could figure it out from the code in 5 minutes, delete it. Update this file whenever Claude gets something wrong.
 
 ## Repo Map
 
-> **TODO:** Expand these one-liners. A good entry is 2-4 sentences naming services, deployment modes, key dependencies, and anything unusual. Mark repos your team does NOT own as "context repo, not team-owned." Note any non-standard default branches (e.g., "develop" instead of "main").
+> **The authoritative list of repos is in `repos.json` at the workspace root.** Each entry has `name`, `repo`, `description`, `language`, `defaultBranch`, and `tags`. Read that file for the current list — do not duplicate it here, because duplicated lists go stale.
+>
+> **Use this section for context that doesn't fit in a JSON field** — ownership notes, "context repo, not team-owned" labels, non-standard default branches, or operational quirks tied to specific repos. Leave empty if nothing applies.
 
-__REPO_MAP__
+- TODO: Add per-repo context notes here (ownership, exceptions, operational quirks)
+
 ## Cross-Repo Relationships
 
 > **TODO:** This is the single highest-value section. Without it, Claude treats each repo as independent. Be specific: include API endpoints, in-cluster URLs, data flow direction, timeouts, failure modes. Not just "A calls B."
 
 __CROSS_REPO__
+
+## What Belongs Here vs. Shared Libraries
+
+> **TODO:** This section prevents the "utility written into the wrong repo three times" failure mode. It matters most when the workspace has a clear shared-library / core / commons repo. **If your workspace has no hub repo, delete this section — don't leave it empty.**
+>
+> Fill in the hub repo name and the decision tree below. Claude reads this before adding code and uses it to pick the right location.
+
+**The `TODO-shared-lib-repo/` repository is the source of truth for:**
+- Type definitions shared across services
+- Date/time utilities
+- Validation logic
+- Error types and error handling
+
+Before adding a utility, check:
+- Is this logic needed by more than one repo? → Put it in `TODO-shared-lib-repo/`
+- Is this specific to one repo's domain (e.g., API response formatting)? → Put it in that repo
+- Is this specific to data ingestion / a specific pipeline? → Put it in the repo that owns that pipeline
+
+**You CANNOT always determine the right location from the code alone.** When the right repo is ambiguous, ASK before writing — don't guess.
 
 ## Key Systems / Codenames
 
@@ -93,6 +117,15 @@ TODO: Add your team's priority ordering
 - Never run destructive commands without explicit approval
 - TODO: e.g., "3 attempts max per failing test fix, then STOP and show what failed"
 - TODO: e.g., "Always confirm before modifying shared config files"
+
+## Living Documentation
+
+This file is the team's shared map of the workspace. **If you change the territory, update the map.**
+
+- When you discover a new cross-repo relationship, a codename, a non-obvious default, or a gotcha — propose an update to this file BEFORE writing code that depends on that knowledge.
+- When a section's content becomes wrong, flag it and propose a fix rather than silently working around it.
+- Updates to this file are always part of the change that prompted them — never defer updates to "later" or a separate PR.
+- Propose the exact diff in natural language, then wait for approval before running Write/Edit. The team reviews changes to this file like it's source code, because it is.
 
 ## Git Workflow
 

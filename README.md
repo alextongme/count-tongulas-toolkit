@@ -23,7 +23,7 @@ Then install any plugin:
 
 | Plugin | What it does | Walkthrough |
 |--------|--------------|-------------|
-| `count-tongulas-workspace` | Creates multi-repo workspaces with shared Claude context — generates a repo registry, CLAUDE.md scaffold, Makefile, and bootstrap script. | [alextong.me/toolkit/workspace](https://alextong.me/toolkit/workspace) |
+| `count-tongulas-workspace` | Creates and audits multi-repo workspaces with shared Claude context. Scaffolds a repo registry, CLAUDE.md, Makefile, and bootstrap scripts; the companion audit skill reconciles workspace claims against GitHub and local state. | [alextong.me/toolkit/workspace](https://alextong.me/toolkit/workspace) |
 | `pr` | Generates structured PR descriptions from the current branch diff. Built for AI-assisted development where the PR body is the primary review artifact. | [The PR Description Is the New Code Review](https://alextong.me/newsletter/code-review-wrong) |
 | `education` | Creates beautiful, printable educational worksheets as self-contained HTML files. For any grade level, subject, or audience. | [alextong.me/toolkit](https://alextong.me/toolkit) |
 | `claude-brain` | Audits CLAUDE.md and `.claude/rules/` files for staleness, contradictions, and missing context. | [alextong.me/toolkit](https://alextong.me/toolkit) |

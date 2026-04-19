@@ -12,24 +12,6 @@ Replace these strings globally:
 
 ## Multi-line Substitutions
 
-### `__REPO_MAP__`
-
-For each group (sorted alphabetically), generate:
-
-```markdown
-### {Display Name}
-
-| Repo | Purpose |
-|------|---------|
-| `repo-name` | {language}. {description} |
-
-```
-
-- Use the **Display name** from the Phase 4 grouping table (`ios` -> "iOS", `typescript` -> "TypeScript", `infra` -> "Infrastructure", etc.)
-- Include language followed by period only if not "unknown"
-- Escape pipe characters `|` in descriptions as `\|`
-- Each group's table MUST end with a trailing blank line (the template has no separator before the next heading)
-
 ### `__DEPLOY_TABLE__`
 
 ```markdown
