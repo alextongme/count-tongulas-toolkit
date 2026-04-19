@@ -27,6 +27,10 @@ Options:
   --clone-only     Clone repos without running bootstrap
   -h, --help       Show this help message
 
+Environment:
+  TAGS=a,b,c       Filter repos by tags (comma-separated). Only clone/bootstrap
+                   repos whose .tags array contains at least one matching tag.
+
 Repo groups (from repos.json):
 $(jq -r 'keys[] as $k | "  \($k): \(.[$k] | map(.name) | join(", "))"' "$REPOS_JSON" 2>/dev/null || echo "  (run from workspace directory to see groups)")
 EOF
@@ -74,10 +78,26 @@ if ! gh auth status &>/dev/null 2>&1; then
     exit 1
 fi
 
+if [[ -n "${TAGS:-}" ]]; then
+    log "Tag filter active: $TAGS (only matching repos will be cloned/bootstrapped)"
+fi
+
 # --- Clone repos --------------------------------------------------------------
 
+# Returns 0 if TAGS is unset OR the repo's .tags array contains at least one
+# tag in $TAGS. Used to filter clone/bootstrap operations.
+matches_tags() {
+    local group="$1" idx="$2"
+    [[ -z "${TAGS:-}" ]] && return 0
+    local result
+    result=$(jq -r --arg T "$TAGS" --arg g "$group" --argjson i "$idx" \
+        '($T | split(",")) as $w | .[$g][$i] | ((.tags // []) | any(. as $t | $w | index($t)))' \
+        "$REPOS_JSON" 2>/dev/null)
+    [[ "$result" == "true" ]]
+}
+
 clone_repo() {
-    local name="$1" repo="$2" desc="$3"
+    local name="$1" repo="$2" desc="$3" ref="${4:-}"
     local target="$WORKSPACE_DIR/$name"
     if [[ -d "$target/.git" ]]; then
         ok "$name already cloned"
@@ -119,6 +139,15 @@ clone_repo() {
         err "Failed to clone $name — skipping"
         return 0
     fi
+    if [[ -n "$ref" ]]; then
+        log "Checking out $ref in $name..."
+        if ! (cd "$target" && git checkout --quiet "$ref"); then
+            warn "$name — checkout of $ref failed (cloned on default branch)"
+        else
+            ok "Cloned $name at $ref"
+            return 0
+        fi
+    fi
     ok "Cloned $name"
 }
 
@@ -127,11 +156,13 @@ clone_group() {
     local count
     count=$(jq -r ".\"$group\" | length" "$REPOS_JSON")
     for ((i = 0; i < count; i++)); do
-        local name repo desc
+        local name repo desc ref
         name=$(jq -r ".\"$group\"[$i].name" "$REPOS_JSON")
         repo=$(jq -r ".\"$group\"[$i].repo" "$REPOS_JSON")
         desc=$(jq -r ".\"$group\"[$i].description" "$REPOS_JSON")
-        clone_repo "$name" "$repo" "$desc"
+        ref=$(jq -r ".\"$group\"[$i].ref // empty" "$REPOS_JSON")
+        if ! matches_tags "$group" "$i"; then continue; fi
+        clone_repo "$name" "$repo" "$desc" "$ref"
     done
 }
 
@@ -218,6 +249,7 @@ for group in $(jq -r 'keys[]' "$REPOS_JSON"); do
     count=$(jq -r ".\"$group\" | length" "$REPOS_JSON")
     for ((i = 0; i < count; i++)); do
         name=$(jq -r ".\"$group\"[$i].name" "$REPOS_JSON")
+        if ! matches_tags "$group" "$i"; then continue; fi
         bootstrap_repo "$name"
     done
 done
@@ -361,6 +393,9 @@ for group in $(jq -r 'keys[]' "$REPOS_JSON"); do
     count=$(jq -r ".\"$group\" | length" "$REPOS_JSON")
     for ((i = 0; i < count; i++)); do
         name=$(jq -r ".\"$group\"[$i].name" "$REPOS_JSON")
+        # Skip repos filtered out by TAGS in the summary too, so they aren't
+        # counted as "failed".
+        if ! matches_tags "$group" "$i"; then continue; fi
         if [[ -d "$WORKSPACE_DIR/$name" ]]; then
             echo "  $name"
             CLONED_COUNT=$((CLONED_COUNT + 1))

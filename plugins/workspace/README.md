@@ -13,6 +13,7 @@ Multi-repo workspace generator for Claude Code. Creates workspaces with shared c
 | Command | Description |
 |---------|-------------|
 | `/count-tongulas-workspace:create` | Create a new workspace |
+| `/count-tongulas-workspace:audit` | Audit an existing workspace for drift — reconciles `repos.json` and `.claude/CLAUDE.md` against GitHub and local state |
 
 ## What Gets Generated
 
@@ -20,11 +21,12 @@ Running `/count-tongulas-workspace:create` produces a workspace directory with:
 
 | File | Description |
 |------|-------------|
-| `repos.json` | Repo registry grouped by language |
+| `repos.json` | Repo registry grouped by language, with `tags` for filtering and optional `ref` pinning |
 | `.gitignore` | Excludes cloned repos, tracks `.claude/` config |
-| `.claude/CLAUDE.md` | AI context scaffolded with repo map, deployment table, and guidance |
-| `Makefile` | Workspace commands: `setup`, `update`, `status`, `search`, `gitignore` |
-| `setup.sh` | Idempotent repo cloning and bootstrap script |
+| `.claude/CLAUDE.md` | AI context scaffolded with cross-repo sections and guidance |
+| `.contract-sources` | Stub — list cross-repo contract files here so `make contracts-check` can flag staleness |
+| `Makefile` | Workspace commands: `setup`, `update`, `status`, `search`, `contracts-check`, `gitignore` |
+| `setup.sh` | Idempotent repo cloning and bootstrap script (supports `TAGS=` filter and `ref` checkout) |
 | `README.md` | Workspace documentation |
 
 ## Usage

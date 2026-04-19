@@ -30,12 +30,25 @@ Then run `make setup` — the setup script automatically skips repos that alread
 | `make update` | Pull latest across all cloned repos |
 | `make status` | Git status for all repos |
 | `make search QUERY='...'` | Search across all repos |
-| `make gitignore` | Regenerate .gitignore from repos.json |
+| `make contracts-check` | Report staleness of files listed in `.contract-sources` |
+| `make gitignore` | Regenerate `.gitignore` from `repos.json` |
 | `make help` | Show all targets |
+
+### Filtering by tag
+
+Every repo in `repos.json` has a `tags` array. Any cross-repo target accepts `TAGS=a,b` to run only on repos whose tags overlap:
+
+```bash
+make update TAGS=orders         # Pull only repos tagged 'orders'
+make setup  TAGS=infra,shared   # Clone only repos tagged 'infra' or 'shared'
+make status TAGS=orders
+```
+
+Edit `repos.json` to add domain-specific tags (e.g. `["go", "orders"]`) — the default is the language group name.
 
 ## Adding a repo
 
-1. Add it to `repos.json`
+1. Add it to `repos.json` (include at least one tag; optionally pin a `ref` like a commit SHA, tag, or branch)
 2. Run `make gitignore` to update .gitignore
 3. Run `make setup` (only clones the new repo, skips existing ones)
 4. Update `.claude/CLAUDE.md` with the repo's purpose and relationships
