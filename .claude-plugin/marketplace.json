@@ -22,6 +22,20 @@
       "keywords": ["claude-code", "skills", "education", "git", "worksheet", "pr", "code-review"],
       "homepage": "https://alextong.me/toolkit",
       "license": "MIT"
+    },
+    {
+      "name": "power-setup",
+      "source": "./plugins/power-setup",
+      "description": "Alex Tong's actual Claude Code config — copy his. Starts with the status line (model + project + branch + context remaining + cost). Safety hooks and session logging coming next.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alex Tong",
+        "url": "https://alextong.me"
+      },
+      "category": "productivity",
+      "keywords": ["claude-code", "statusline", "config", "dotfiles", "power-setup"],
+      "homepage": "https://alextong.me/toolkit",
+      "license": "MIT"
     }
   ]
 }

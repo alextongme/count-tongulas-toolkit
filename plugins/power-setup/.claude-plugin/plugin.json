@@ -1,0 +1,13 @@
+{
+  "name": "power-setup",
+  "version": "0.1.0",
+  "description": "Alex Tong's actual Claude Code config — copy his. Starts with the status line (model + project + branch + context remaining + cost). Safety hooks and session logging coming next.",
+  "author": {
+    "name": "Alex Tong",
+    "url": "https://alextong.me"
+  },
+  "homepage": "https://alextong.me/toolkit",
+  "repository": "https://github.com/alextongme/count-tongulas-toolkit",
+  "license": "MIT",
+  "keywords": ["claude-code", "statusline", "config", "dotfiles", "power-setup"]
+}

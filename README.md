@@ -23,6 +23,7 @@ Then install any plugin:
 |--------|--------------|-------------|
 | `pr-summary-generator` | Generates structured PR descriptions from the current branch diff. Built for AI-assisted development where the PR body is the primary review artifact. | [The PR Description Is the New Code Review](https://alextong.me/newsletter/code-review-wrong) |
 | `worksheet-maker` | Creates beautiful, printable educational worksheets as self-contained HTML files. For any grade level, subject, or audience. | [alextong.me/toolkit](https://alextong.me/toolkit) |
+| `power-setup` | My actual Claude Code config. Starts with the status line (model + project + branch + context remaining + cost). Safety hooks and session logging coming next. | [alextong.me/toolkit](https://alextong.me/toolkit) |
 
 ## Why a marketplace?
 
