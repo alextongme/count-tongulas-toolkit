@@ -17,6 +17,7 @@ Then install any plugin:
 /plugin install pr@count-tongulas-toolkit
 /plugin install education@count-tongulas-toolkit
 /plugin install claude-brain@count-tongulas-toolkit
+/plugin install company-research@count-tongulas-toolkit
 ```
 
 ## Plugins
@@ -27,6 +28,7 @@ Then install any plugin:
 | `pr` | Generates structured PR descriptions from the current branch diff. Built for AI-assisted development where the PR body is the primary review artifact. | [The PR Description Is the New Code Review](https://alextong.me/newsletter/code-review-wrong) |
 | `education` | Creates beautiful, printable educational worksheets as self-contained HTML files. For any grade level, subject, or audience. | [alextong.me/toolkit](https://alextong.me/toolkit) |
 | `claude-brain` | Audits CLAUDE.md and `.claude/rules/` files for staleness, contradictions, and missing context. | [alextong.me/toolkit](https://alextong.me/toolkit) |
+| `company-research` | Researches a company comprehensively — culture, WLB, leadership, comp — with an optional role-specific interview deep-dive. Output is a saved markdown packet covering verified culture findings, hiring manager signal, interview process, and prep frameworks. | [alextong.me/toolkit](https://alextong.me/toolkit) |
 
 ## Why a marketplace?
 
