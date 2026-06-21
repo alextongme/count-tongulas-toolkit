@@ -1,4 +1,4 @@
-# Count Tongula's Toolkit
+# Count Tongula's Toolkit — by [Alex Tong](https://alextong.me)
 
 Free Claude Code plugins from [Alex Tong](https://alextong.me) — skills, templates, and configs for AI-assisted development. Each plugin comes with a full walkthrough on [alextong.me/newsletter](https://alextong.me/newsletter).
 
