@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Free Claude Code plugins from Alex Tong — skills for AI-assisted development and printable educational worksheets.",
-    "version": "0.13.0"
+    "version": "0.14.0"
   },
   "plugins": [
     {
@@ -27,7 +27,7 @@
       "name": "pr",
       "source": "./plugins/pr",
       "description": "PR workflow skills — generate structured PR descriptions from your branch diff.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "Alex Tong",
         "url": "https://alextong.me"
@@ -76,6 +76,20 @@
       },
       "category": "research",
       "keywords": ["company-research", "interview-prep", "career", "culture", "glassdoor", "blind", "linkedin"],
+      "homepage": "https://alextong.me/toolkit",
+      "license": "MIT"
+    },
+    {
+      "name": "learn",
+      "source": "./plugins/learn",
+      "description": "Stay-in-the-loop skills — turn Claude into a teacher that verifies you deeply understand the work before you move on. Probes before explaining, quizzes by retrieval, and keeps a comprehension checklist that gates when the session can end.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alex Tong",
+        "url": "https://alextong.me"
+      },
+      "category": "dev-workflow",
+      "keywords": ["teaching", "comprehension", "understanding", "socratic", "active-recall", "in-the-loop", "code-review"],
       "homepage": "https://alextong.me/toolkit",
       "license": "MIT"
     }

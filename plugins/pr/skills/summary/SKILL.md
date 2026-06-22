@@ -57,7 +57,13 @@ Read the current branch against its base. Why this first: without commit history
 
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-BASE=$(git rev-parse --verify main 2>/dev/null && echo "main" || echo "master")
+
+# Resolve the base branch: PR_BASE_BRANCH wins, else origin/HEAD, else main/master.
+BASE="$PR_BASE_BRANCH"
+[ -z "$BASE" ] && BASE=$(git symbolic-ref --short -q refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@')
+[ -z "$BASE" ] && for b in main master; do
+  git rev-parse --verify --quiet "$b" >/dev/null 2>&1 && BASE=$b && break
+done
 
 git diff ${BASE}...HEAD
 git log ${BASE}..HEAD --pretty=format:"%s%n%b" --reverse
